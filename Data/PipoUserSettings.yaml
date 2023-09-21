@@ -1,0 +1,27 @@
+dict1:
+    ExportRaimbow: true
+    ExportWebsite: true
+    FavoriteFiles:
+        prop_testCube_mod_v001.ma: //storage/esma/3D4/trash/04_asset/prop/testCube/maya/scenes/edit/mod/prop_testCube_mod_v001.ma
+    checkboxValuesExportPanel:
+    - false
+    - false
+    - true
+    - true
+    - false
+    checkboxValuesMainPage:
+    - false
+    - false
+    - true
+    - false
+    - false
+    checkboxValuesMissingFramesPanel:
+    - false
+    checkboxValuesRenamePanel:
+    - false
+    - false
+    checkboxValuesTextureLinkingPanel:
+    - true
+    - false
+    - true
+    - true
