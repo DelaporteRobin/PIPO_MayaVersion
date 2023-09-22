@@ -384,7 +384,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 				self.type_list_value.append(key)
 
 		self.note_column = mc.columnLayout(adjustableColumn=True, parent=self.assets_main_rightcolumn)
-		self.favorite_frame = mc.frameLayout(backgroundColor=self.bright_color, parent=self.note_column, label="Favorite scenes", collapsable=True, collapse=False)
+		self.favorite_frame = mc.frameLayout(backgroundColor=self.bright_color, parent=self.note_column, label="Favorite scenes", collapsable=True, collapse=True)
 		self.favorite_list = mc.textScrollList(numberOfRows=8, parent=self.favorite_frame, doubleClickCommand=partial(self.open_location_function, "open", "event"))
 		mc.button(label="Delete Favorite", parent=self.favorite_frame, command=self.delete_favorite_file_function)
 		mc.separator(style="singleDash", height=15, parent=self.favorite_frame)
