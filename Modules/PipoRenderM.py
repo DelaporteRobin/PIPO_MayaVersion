@@ -509,7 +509,7 @@ class PipelineRenderApplication:
 				texture_attribute = texture_settings[channel][1][1]
 				output = texture_settings[channel][1][2]
 
-				old_node = mc.shadingNode(texture_node, asShader=True)
+				old_node = mc.shadingNode(texture_node, asTexture=True)
 
 
 
@@ -541,7 +541,7 @@ class PipelineRenderApplication:
 				
 				shading_middle_node = texture_settings[channel][2]
 				for node in shading_middle_node:
-					new_node = mc.shadingNode(node[0], asShader=True)
+					new_node = mc.shadingNode(node[0], asTexture=True)
 					for attribute_to_change in attribute_to_change_list:
 						if mc.nodeType(new_node) == attribute_to_change[0]:
 							#set the attribute of that node
@@ -588,6 +588,7 @@ class PipelineRenderApplication:
 				get the shading engine to select
 				"""
 				shading_engine = mc.listConnections(shader, type="shadingEngine")
+
 				if shading_engine == None:
 					mc.warning("Shader skipped, Impossible to find shading engine [%s]"%shader)
 				else:
@@ -600,12 +601,28 @@ class PipelineRenderApplication:
 			mc.select(self.all_connexions, r=True, ne=True)
 			
 			try:
+				#create all required folders
+				os.makedirs(os.path.join(mc.textField(self.project_label, query=True, text=True), "PipelineManagerData/shaderDataBase/"), exist_ok=True)
 				mc.file(os.path.join(mc.textField(self.project_label, query=True, text=True), "PipelineManagerData/shaderDataBase/shader_%s.ma"%selection[0]), type="mayaAscii", es=True)
 				print("Shader exported [shader_%s.ma]"%(selection[0]))
 			
 			except:
 				mc.error("Impossible to export shader!")
 				return
+			#update the list in the textscrolllist
+			#list files in the shader data base library
+			content_list = os.listdir(os.path.join(mc.textField(self.project_label, query=True, text=True), "PipelineManagerData/shaderDataBase/"))
+			file_list = []
+			for content in content_list:
+				
+				if os.path.isfile(os.path.join(mc.textField(self.project_label, query=True, text=True), "PipelineManagerData/shaderDataBase/%s"%content))==True:
+					#check the starting keyword in the filename
+					filename = os.path.splitext(os.path.basename(content))[0].split("_")
+					#print(filename)
+					if filename[0] == "shader":
+						file_list.append(content)
+			mc.textScrollList(self.saved_shader_textscrolllist, edit=True, removeAll=True, append=file_list)
+
 			
 
 

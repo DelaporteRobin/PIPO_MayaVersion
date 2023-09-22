@@ -11,7 +11,7 @@ dict1:
     - false
     checkboxValuesMainPage:
     - false
-    - false
+    - true
     - true
     - false
     - false

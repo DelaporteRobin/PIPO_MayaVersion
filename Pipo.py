@@ -87,8 +87,9 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 
 						button = mc.shelfButton(
 							label=script_name,
+							annotation=script_name,
 							image=image,
-							style="iconOnly",
+							style="iconAndTextCentered",
 							parent=self.pipo_shelf,
 							command=script_content,
 							)
@@ -454,7 +455,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 
 		self.hardrename_checkbox_file = mc.checkBox(label="Include files", parent=self.assets_rename_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"))
 		self.hardrename_checkbox_folder = mc.checkBox(label="Include folders", parent=self.assets_rename_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"))
-		mc.button(label="Hard Rename in Pipeline", command=partial(self.rename_filename_function, "HARDRENAME"))
+		mc.button(label="Hard Rename in Pipeline", enable=False, command=partial(self.rename_filename_function, "HARDRENAME"))
 
 
 		
@@ -735,11 +736,11 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 		self.export_edit_shot_intfield = mc.intField(parent=self.export_edit_frame)
 		
 		
-		mc.button(label="Export", parent=self.export_edit_frame, command=partial(self.export_edit_function, "standard"),backgroundColor=self.dark_color)
+		mc.button(label="Save Edit", parent=self.export_edit_frame, command=partial(self.export_edit_function, "standard"),backgroundColor=self.dark_color)
 		mc.button(label="Export selected", parent=self.export_edit_frame, command=partial(self.export_edit_function, "selection"))
 
 		self.export_publish_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Export publish files", parent=self.export_leftcolumn, collapsable=True, collapse=True)
-		mc.button(label="Export Publish", parent=self.export_publish_frame, command=partial(self.export_publish_function, "standard"),backgroundColor=self.dark_color)
+		mc.button(label="Save Publish", parent=self.export_publish_frame, command=partial(self.export_publish_function, "standard"),backgroundColor=self.dark_color)
 		#self.export_publish_keepname_checkbox = mc.checkBox(label="Keep item name", parent=self.export_leftcolumn)
 		mc.button(label="Publish selected", parent=self.export_publish_frame,command=partial(self.export_publish_function, "selection"))
 
@@ -779,7 +780,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 
 
 		mc.tabLayout(self.tabs, edit=True, tabLabel=((self.prod_column, "PROD ASSETS"), (self.export_column, "EXPORT"), (self.render_column, "RENDER"), (self.archive_column, "ARCHIVE")))
-		self.dock_control = mc.dockControl(label="Pipo - Written by Quazar", enablePopupOption=True, floating=True, area="left", content=self.main_window, allowedArea=["right", "left"])
+		#self.dock_control = mc.dockControl(label="Pipo - Written by Quazar", enablePopupOption=True, floating=True, area="left", content=self.main_window, allowedArea=["right", "left"])
 
 
 		self.apply_user_settings_function()

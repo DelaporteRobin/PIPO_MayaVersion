@@ -901,10 +901,24 @@ class PipelineApplication:
 
 	def import_in_scene_function(self, command, event):
 		#get the selection in the file list
+		favorite_selection = mc.textScrollList(self.favorite_list, query=True, si=True)
 		file_selection = mc.textScrollList(self.result_list, query=True, si=True)
 		folder_name = (mc.textField(self.project_label, query=True, text=True))
 		#project_name = os.path.basename(os.path.normpath(folder_name))
 
+		if favorite_selection != None:
+			#get the filepath in the user settings
+			filepath = self.user_settings["FavoriteFiles"][favorite_selection[0]]
+			try:
+				if command == False:
+					mc.file(filepath, i=True)
+				if command == True:
+					mc.file(filepath, r=True)
+				mc.warning("File imported successfully [%s]!"%filepath)
+				return 
+			except:
+				mc.error("Impossible to import this file [%s]!"%filepath)
+				return
 		if file_selection == None:
 			mc.error("You have to select at least one file!")
 			return 
@@ -1370,7 +1384,7 @@ class PipelineApplication:
 		    mc.currentTime(mc.currentTime(q=True) + frame_duration)
 		    sleep(0.2)
 
-		mc.displayRGBColor("background", *(0.5,0.5,0.5))
+		mc.displayRGBColor("background", *(0.3,0.3,0.3))
 		congrats_rank = randrange(0,8)
 		if os.path.isfile("Data/icons/congrats%s.gif"%congrats_rank)==True:
 		
@@ -1738,16 +1752,25 @@ class PipelineApplication:
 
 
 	def open_location_function(self, data, event):
+
 		favorite_selection = mc.textScrollList(self.favorite_list, query=True, si=True)
 		if favorite_selection != None:
 			#get the user settings
 			file_to_open = self.user_settings["FavoriteFiles"][favorite_selection[0]]
-			print(file_to_open)
-			try:
-				mc.file(file_to_open, force=True, o=True)
-			except:
-				mc.error("Impossible to open the file")
-			return
+
+			if data == "folder":
+				#get the folder in user settings
+				folder_path = os.path.dirname(self.user_settings["FavoriteFiles"][favorite_selection[0]])
+				mc.fileDialog2(ds=1, fm=1, dir=folder_path)
+				return
+			else:
+
+				
+				try:
+					mc.file(file_to_open, force=True, o=True)
+				except:
+					mc.error("Impossible to open the file")
+				return
 
 		#check selection in result textscrolllist
 		selection = mc.textScrollList(self.result_list, query=True, si=True)[0]
