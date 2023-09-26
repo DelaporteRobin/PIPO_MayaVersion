@@ -72,10 +72,10 @@ class PipelineApplication:
 		
 		
 			try:	
-				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineSettings.yaml"), "r") as read_file:
-					load_data = yaml.load(read_file,Loader=yaml.Loader)
-				with open(os.path.join(self.program_folder, "Data/PipoUserSettings.yaml"), "r") as read_file:
-					user_settings = yaml.load(read_file, Loader=yaml.Loader)
+				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineSettings.json"), "r") as read_file:
+					load_data = json.load(read_file)
+				with open(os.path.join(self.program_folder, "Data/PipoUserSettings.json"), "r") as read_file:
+					user_settings = json.load(read_file)
 				
 				self.user_settings = user_settings["dict1"]
 				self.settings = load_data["dict1"]
@@ -228,11 +228,11 @@ class PipelineApplication:
 				}
 
 				#save the pipeline file
-				with open(os.path.join(path, "PipelineManagerData/PipelineSettings.yaml"), "w") as save_file:
-					yaml.dump(saving_dictionnary, save_file, indent=4)
+				with open(os.path.join(path, "PipelineManagerData/PipelineSettings.json"), "w") as save_file:
+					save_file.write(json.dumps(saving_dictionnary,indent=4))
 				#save the user settings file
-				with open(os.path.join(self.program_folder, "Data/PipoUserSettings.yaml"), "w") as save_file:
-					yaml.dump(user_dictionnary, save_file, indent=4)
+				with open(os.path.join(self.program_folder, "Data/PipoUserSettings.json"), "w") as save_file:
+					save_file.write(json.dumps(user_dictionnary,indent=4))
 			except AttributeError:
 				print("Impossible to save!")
 				self.create_pipeline_settings_function()
@@ -245,7 +245,7 @@ class PipelineApplication:
 
 
 
-
+	
 	def create_pipeline_settings_function(self):
 		print("Settings file created!")
 		basic_file_type_list = ["mod", "rig", "groom", "cloth", "lookdev", "layout", "camera", "anim", "render", "compositing"]
@@ -282,7 +282,7 @@ class PipelineApplication:
 			"renderShaderNodeList":["lambert"]
 		}
 		self.user_settings = {
-			"checkboxValuesMainPage":[False, False, True, False, False],
+			"checkboxValuesMainPage":[False, True, True, False, False],
 			"checkboxValuesRenamePanel":[False, False],
 			"checkboxValuesTextureLinkingPanel":[True, False, True, True],
 			"checkboxValuesMissingFramesPanel":[False],
@@ -293,43 +293,61 @@ class PipelineApplication:
 		}
 		
 		self.texture_settings = {
-			"Renderman":{
+
+			"Renderman": {
+
 				"diffuse": [
-					["diffuse","Diffuse","Diff","diff"],
-					("PxrTexture","filename","resultRGB"),
+					["diffuse","Diffuse", "Diff", "diff"],
+					("PxrTexture", "filename", "resultRGB"),
 					[
-						("PxrHSL", "inputRGB", "resultRGB"),
-						("PxrRemap", "inputRGB", "resultRGB"),
+						("PxrVary", "inputRGB", "resultRGB"),
+						("PxrColorCorrect", "inputRGB", "resultRGB"),
 					],
 					("PxrSurface", "diffuseColor"),
 					[
-						("PxrTexture","linearize",1)
+						("PxrTexture", "linearize", 1),
 					]
+				],
+
+				"roughness": [
+					["roughness", "rough", "Roughness", "Rough"],
+					("PxrTexture", "filename", "resultRGBR"),
+					[
+						("PxrRemap", "inputRGBR", "resultRGBR"),
 					],
+					("PxrSurface", "specularRoughness"),
+					[]
+				],
+
+				"normal": [
+					["normal", "Normal"],
+					("PxrNormalMap", "filename", "resultN"),
+					[],
+					("PxrSurface", "bumpNormal"),
+					[]
+				],
 
 				"displace": [
-					["displace", "Displace", "disp", "Disp"],
+					["displace", "disp", "Displace", "Disp"],
 					("PxrTexture","filename", "resultRGBR"),
 					[
 						("PxrRemap", "inputRGBR", "resultRGBR"),
-						("PxrDispTransform", "dispScalar", "resultF"),
 						("PxrDisplace", "dispScalar", "outColor"),
 					],
-					("shadingEngine", "rman__displacement"),
-					[
-						("PxrTexture", "linearize",0),
-						("PxrDispTransform","dispRemapMode",2)
-					]
+					("shadingEngine","rman__displacement"),
+					[]
 				]
-				}
+			}
+
 		}
+		
 		
 
 		self.save_settings_file()
 		return self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings
 
 
-
+	
 	def reset_default_syntax_function(self,event):
 		self.default_settings = {
 			"character":["[project]_[key]_[name]_[type]", "char", None],
@@ -363,10 +381,10 @@ class PipelineApplication:
 			"discordBotToken":None,
 			"discordChannelId":None,
 			"renderEngine":"Renderman",
-			"renderShaderNodeList":["lambert"]
+			"renderShaderNodeList":["lambert"],
 		}
 		self.default_user_settings = {
-			"checkboxValuesMainPage":[False, False, True, False, False],
+			"checkboxValuesMainPage":[False, True, True, False, False],
 			"checkboxValuesRenamePanel":[False, False],
 			"checkboxValuesTextureLinkingPanel":[True, False, True, True],
 			"checkboxValuesMissingFramesPanel":[False],
@@ -377,33 +395,52 @@ class PipelineApplication:
 		}
 		
 		self.default_texture_settings = {
-			"Renderman":{
+
+			"Renderman": {
+
 				"diffuse": [
-					["diffuse","Diffuse","Diff","diff"],
-					("PxrTexture","filename","resultRGB"),
+					["diffuse","Diffuse", "Diff", "diff"],
+					("PxrTexture", "filename", "resultRGB"),
 					[
-						("PxrHSL", "inputRGB", "resultRGB"),
-						("PxrRemap", "inputRGB", "resultRGB"),
+						("PxrVary", "inputRGB", "resultRGB"),
+						("PxrColorCorrect", "inputRGB", "resultRGB"),
 					],
 					("PxrSurface", "diffuseColor"),
 					[
-						("PxrTexture","linearize",1)
+						("PxrTexture", "linearize", 1),
 					]
+				],
+
+				"roughness": [
+					["roughness", "rough", "Roughness", "Rough"],
+					("PxrTexture", "filename", "resultRGBR"),
+					[
+						("PxrRemap", "inputRGBR", "resultRGBR"),
 					],
+					("PxrSurface", "specularRoughness"),
+					[]
+				],
+
+				"normal": [
+					["normal", "Normal"],
+					("PxrNormalMap", "filename", "resultN"),
+					[],
+					("PxrSurface", "bumpNormal"),
+					[]
+				],
 
 				"displace": [
-					["displace", "Displace", "disp", "Disp"],
+					["displace", "disp", "Displace", "Disp"],
 					("PxrTexture","filename", "resultRGBR"),
 					[
 						("PxrRemap", "inputRGBR", "resultRGBR"),
 						("PxrDisplace", "dispScalar", "outColor"),
 					],
-					("shadingEngine", "rman__displacement"),
-					[
-						()
-					]
+					("shadingEngine","rman__displacement"),
+					[]
 				]
-				}
+			}
+
 		}
 		
 

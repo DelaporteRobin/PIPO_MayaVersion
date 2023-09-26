@@ -1,0 +1,34 @@
+{
+    "dict1": {
+        "checkboxValuesMainPage": [
+            false,
+            true,
+            true,
+            false,
+            false
+        ],
+        "checkboxValuesRenamePanel": [
+            false,
+            false
+        ],
+        "checkboxValuesTextureLinkingPanel": [
+            false,
+            true,
+            true,
+            true
+        ],
+        "checkboxValuesMissingFramesPanel": [
+            false
+        ],
+        "checkboxValuesExportPanel": [
+            false,
+            false,
+            true,
+            false,
+            false
+        ],
+        "FavoriteFiles": {},
+        "ExportRaimbow": true,
+        "ExportWebsite": true
+    }
+}

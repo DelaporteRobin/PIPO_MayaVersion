@@ -14,13 +14,8 @@
 ==============================================================
 FEATURES TO CREATE
 ==============================================================
-- recreate the whole GUI wiht pyside
 
 - create an explorer on the whole computer
-
-- create a new setting file in maya script folder for each 
-   user to manage settings on the interface 
-   (limit research to project, detect udims...)
 
 - namespaces when importing
 - real incrementation system (with one button)
@@ -29,13 +24,6 @@ FEATURES TO CREATE
 
 - alembic system (import / export)
 
-- archive system (for deleted elements or for backup)
-   - listing elements of the archive with informations when selecting!
-
-- delete archive
-- remove or add files in the archive
-- backup pipeline (parallel process !!!)	
-
 - create hard renamer for each elements in the project that contain 
    the name (any kind of file or folder visible or not!)
 
@@ -43,12 +31,10 @@ FEATURES TO CREATE
    - size on the storage
    - last time modified
 
+- Shading (file parsing add extension)
+   Fix automatic mode filenames!
 
--Define scene as favorite (file name and file path stored in user settings to open them quickly)
-   create favorite
-   delete favorite
-   set project
-   open
+- Find an other searching file system and apply it to everything!
 
 
 

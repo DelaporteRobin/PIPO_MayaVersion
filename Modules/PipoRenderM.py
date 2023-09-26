@@ -329,9 +329,9 @@ class PipelineRenderApplication:
 							keyword_list = texture_settings[channel][0]
 							for keyword in keyword_list:
 								if (keyword in os.path.splitext(os.path.basename(it.path))[0]):
-									self.texture_list[os.path.splitext(os.path.basename(it.path))[0]] = it.path
+									self.texture_list[(os.path.basename(it.path))] = it.path
 					else:
-						self.texture_list[os.path.splitext(os.path.basename(it.path))[0]] = it.path
+						self.texture_list[(os.path.basename(it.path))] = it.path
 
 			mc.textScrollList(self.render_texture_list_result, edit=True, removeAll=True, append=list(self.texture_list.keys()))
 
@@ -375,6 +375,7 @@ class PipelineRenderApplication:
 					mc.error("Impossible to find the textures!\nDefine a project first!")
 					return
 				texture_folder = False
+
 				for root, dir, files in os.walk(starting_folder):
 					for d in dir:
 						
@@ -384,6 +385,7 @@ class PipelineRenderApplication:
 					if texture_folder != False:
 						break
 				
+
 				if texture_folder == False:
 					mc.error("Impossible to find the texture folder!")
 					return 
@@ -392,19 +394,28 @@ class PipelineRenderApplication:
 					return
 				texture_folder = os.path.join(texture_folder, name_selection[0])
 				texture_extension = self.additionnal_settings["texturesExtension"]
+
 				if (texture_extension == None) or (len(texture_extension)==0):
 					mc.error("Impossible to get textures extension!\nChange your settings!")
 					return
+
+				
+				#find textures in the texture folder with right extensions
 				textures_in_folder = []
 				for extension in texture_extension:
 					result = glob.glob(os.path.join(texture_folder, "*%s"%extension))
 					if (result != None) and (len(result) != 0):
 						textures_in_folder = textures_in_folder + result
+
+
+				
+
 				#for each channel define one texture!
 				file_selection = {}
 				texture_settings = self.texture_settings[self.additionnal_settings["renderEngine"]]
 
 				for channel in channel_selection:
+					
 					#get keywords for this channel
 					keyword_list = texture_settings[channel][0]
 
@@ -414,14 +425,17 @@ class PipelineRenderApplication:
 							#print(os.path.splitext(os.path.basename(file)[0]), keyword in os.path.splitext(os.path.basename(file))[0])
 							if keyword in os.path.splitext(os.path.basename(file))[0]:
 								file_selection[channel] = file 
+
+								print("[%s] : %s"%(channel, file))
 								found=True
 								break
 						if found == True:
 							break
+
 				
 				
 
-
+		
 		#get texture settings
 		if self.additionnal_settings["renderEngine"] != None:
 			try:
@@ -432,59 +446,56 @@ class PipelineRenderApplication:
 
 
 			if type(file_selection) == dict:
-				"""
-				for key, value in file_selection.items():
-					print(key, value)
-				"""
+			
 
 				channel_selection = list(file_selection.keys())
 				file_selection = list(file_selection.values())
 
-			"""
-			print("FILE SELECTION")
-			for element in file_selection:
-				print(element)
-			print("\nCHANNEL SELECTION")
-			for element in channel_selection:
-				print(element)
-			"""
+		
+			for i in range(0, len(file_selection)):
+				file_selection[i] = (r""+file_selection[i]).replace("\\", "/")
 
 
 
 		
-			#check that for each channel the ouptut node in selection is defined
-			for file in file_selection:
+			if mc.checkBox(self.render_texture_udim_checking, query=True, value=True)==True:
 
-
-				#check the name of the file and try to find udim in it!
-				#check the value of "check udim checkbox"
-				
-				if mc.checkBox(self.render_texture_udim_checking, query=True, value=True)==True:
+				for y in range(0, len(file_selection)):
 					udim = False
+					#for each file try to get udims in filename and replace them
 
-					#CHECK FOR THE SYNTAX CONTENT.N.EXR
-					splited_dots = file.split(".")
-					splited_underscore = file.split("_")
+					filename, extension = os.path.splitext(file_selection[y])
 
-					if len(splited_dots)==2:
-						#check if splited_dots[1] is digit
-						if splited_dots[1].isdigit()==True:
-							splited_dots[1] = "<UDIM>"
-							new_file = ".".join(splited_dots)
-							udim=True
+					#split the filename by dots
+					splited_filename_dots = filename.split(".")
+					splited_filename_underscore = filename.split("_")
 
-					elif len(splited_underscore)>=3:
-						#check the last two items of the nomenclature
-						u_value = splited_underscore[-2]
-						v_value = splited_underscore[-1]
+					#try to find <UDIM>
+					if len(splited_filename_dots) > 1:
+						for i in range(1, len(splited_filename_dots)):
 
-						
+							
+							if splited_filename_dots[i].isdigit() == True:
+								print("UDIM POTENTIALLY DETECTED!")
+								#change the filename and replace the udim index by the undim code
+								splited_filename_dots[i] = "<UDIM>"
+
+								file_selection[y] = ".".join(splited_filename_dots) + extension
+								print(file_selection[y])
+								break
+					
+					if len(splited_filename_underscore) >=3 :
+						u_value = splited_filename_underscore[-2]
+						v_value = splited_filename_underscore[-1]
 
 						if (u_value.split("u")[0] == "") and (u_value[1].isdigit()==True) and (v_value.split("v")[0] == "") and (v_value[1].isdigit()==True):
-							splited_underscore[-2] = "u<u>"
-							splited_underscore[-1] = "v<v>"
-							new_file = "_".join(splited_underscore)
-							udim=True
+							splited_filename_underscore[-2] = "u<u>"
+							splited_filename_underscore[-1] = "v<v>"
+							file_selection[y] = "_".join(splited_filename_underscore) + extension
+							print("UDIM POTENTIALLY DETECTED")
+							print(file_selection[y])
+			
+			
 
 				
 
@@ -493,10 +504,12 @@ class PipelineRenderApplication:
 			for i in range(0, len(channel_selection)):
 				channel = channel_selection[i]
 				file = file_selection[i]
+
+				print(channel, file)
+				
 				#get specific attributes for that channel
 				attribute_to_change_list = texture_settings[channel][-1]
-				for element in attribute_to_change_list:
-					print(element)
+				
 
 				
 				#get output node type for that channel

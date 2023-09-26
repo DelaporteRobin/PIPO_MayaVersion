@@ -315,7 +315,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 
 
 	def build_pipeline_interface_function(self):
-		self.main_window = mc.window(sizeable=True, title="Pipo - Written by Quazar", width=self.window_width, height=self.window_height)
+		self.main_window = mc.window(sizeable=False, title="Pipo - Written by Quazar", width=self.window_width, height=self.window_height)
 
 		#self.scrollbar = mc.scrollLayout(width=self.window_width + 40, parent=self.main_window, resizeCommand=self.resize_command_function)
 		self.main_column = mc.columnLayout(adjustableColumn=True, parent=self.main_window)
@@ -595,6 +595,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 		mc.separator(style="singleDash", parent=self.render_texture_column_options, height=20)
 		self.render_texture_limit_project = mc.checkBox(label="Limit research\nto project", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=False, parent=self.render_texture_column_options)
 		self.render_texture_udim_checking = mc.checkBox(label="Check for udims", value=True, changeCommand=partial(self.save_additionnal_settings_function, "none"), parent=self.render_texture_column_options)
+		
 		mc.button(label="REFRESH", parent=self.render_texture_column_options, command=self.refresh_texture_name_function)
 		mc.button(label="Connect\nto selected", command=self.connect_texture_to_selected_shader_function, parent=self.render_texture_column_options)
 
