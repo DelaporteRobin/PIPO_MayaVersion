@@ -12,7 +12,11 @@ import pymel.core as pm
 import os  
 import ctypes
 import sys
+import json
 import pickle
+
+from watchdog.observers import Observer 
+from watchdog.events import FileSystemEventHandler
 
 from time import sleep
 from functools import partial
@@ -37,6 +41,8 @@ if (os.getcwd() in sys.path)==False:
 
 from Pipo.Modules.PipoM import PipelineApplication 
 from Pipo.Modules.PipoRenderM import PipelineRenderApplication
+from Pipo.Modules.PipoObserverM import PipelineObserverApplication
+#from Pipo.Modules.PipoObserverM import MyHandler
 
 
 
@@ -45,8 +51,7 @@ from Pipo.Modules.PipoRenderM import PipelineRenderApplication
 
 
 
-
-class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
+class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, PipelineObserverApplication):
  	
  	
 	def create_script_button_function(self):
@@ -73,8 +78,11 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 				script_name = os.path.splitext(script)[0]
 
 				button_name_list = []
-				for name in mc.shelfLayout("PipoShelf", query=True, childArray=True):
-				   button_name_list.append(mc.shelfButton(name, query=True, label=True))
+				try:
+					for name in mc.shelfLayout("PipoShelf", query=True, childArray=True):
+					   button_name_list.append(mc.shelfButton(name, query=True, label=True))
+				except:
+					pass
 				
 
 
@@ -124,6 +132,9 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 		if self.program_folder == None:
 			mc.warning("The program folder wasn't defined!")
 			return
+
+
+
 
 
 
@@ -229,15 +240,12 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 			mc.warning("No informations loaded!")
 
 
-		self.archive_data = {}
-		if os.path.isdir(self.project_path)==True:
-			try:
-				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "rb") as read_file:
-					self.archive_data = pickle.load(read_file)
 
-			except:
-				mc.warning("Impossible to load archive data!")
+
 				
+
+
+
 		self.create_script_button_function()
 
 		#launch the function that check
@@ -256,12 +264,55 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 	
 		
 		
-	   
-	   
-		#except:
-		#	mc.warning("Impossible to load settings file!")
-		#self.add_log_content_function("Settings loaded")
-	
+	  
+
+
+		self.archive_data = {}
+		if os.path.isdir(self.project_path)==True:
+			try:
+				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "rb") as read_file:
+					self.archive_data = pickle.load(read_file)
+
+			except:
+				mc.warning("Impossible to load archive data!")
+
+			#check if the index folder exists
+			"""
+			if index doesn't exist
+				create the index
+			if the index exist
+				check the settings mirror
+					if settings mirror != settings
+						recreate the index with parsing
+			"""
+			try:
+				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), "r") as read_file:
+					content = json.load(read_file)
+
+				self.settings_mirror = content["mirrorSettings"]
+				self.settings_dictionnary_mirror = content["mirrorSettingsDictionnary"]
+				self.pipeline_index = content["pipelineIndex"]
+
+				#if (self.settings != self.settings_mirror) or (self.settings_dictionnary_mirror != self.settings_dictionnary):
+				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
+				self.create_pipeline_index_thread.start()
+				
+				#else:
+				#	print("Index loaded, no difference in mirrors!")
+			
+			except:
+				mc.warning("Impossible to load Pipeline index!")
+
+				#launch pipeline index
+				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
+				self.create_pipeline_index_thread.start()
+
+
+
+		
+			#CREATE LISTENER
+			self.watchdog_thread = threading.Thread(target=self.watch_folder, args=(self.project_path,))
+			self.watchdog_thread.start()
 
 		#IMPORTANTS VARIABLES
 		self.receive_notification = True
@@ -403,6 +454,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 	
 		#SEARCHBAR
 		self.searchbar_limit_frame = mc.frameLayout(backgroundColor=self.bright_color, parent=self.assets_main_leftcolumn, label="Research settings", collapsable=True, collapse=True)
+		self.index_checkbox = mc.checkBox(label="Use Index file", value=True, parent=self.searchbar_limit_frame)
 		self.searchbar_checkbox = mc.checkBox(label="Limit research to project", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "project"))
 		self.folder_checkbox = mc.checkBox(label="Limit research to default\nfolder", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "folder"))
 		self.scenes_checkbox = mc.checkBox(label="Search for 3D Scenes", value=True, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
@@ -595,7 +647,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication):
 		mc.separator(style="singleDash", parent=self.render_texture_column_options, height=20)
 		self.render_texture_limit_project = mc.checkBox(label="Limit research\nto project", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=False, parent=self.render_texture_column_options)
 		self.render_texture_udim_checking = mc.checkBox(label="Check for udims", value=True, changeCommand=partial(self.save_additionnal_settings_function, "none"), parent=self.render_texture_column_options)
-		
+
 		mc.button(label="REFRESH", parent=self.render_texture_column_options, command=self.refresh_texture_name_function)
 		mc.button(label="Connect\nto selected", command=self.connect_texture_to_selected_shader_function, parent=self.render_texture_column_options)
 

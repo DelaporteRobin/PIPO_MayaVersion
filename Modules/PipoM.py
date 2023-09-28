@@ -14,6 +14,7 @@ import yaml
 import zipfile
 import shutil
 import webbrowser
+import threading
 
 from random import randrange
 from time import sleep
@@ -534,7 +535,13 @@ class PipelineApplication:
 
 			
 		if (type_selection != None) or (kind_selection != None) or (name_selection != None):
-			self.search_files_function(type_selection, kind_selection, name_selection)
+
+			#CREATION OF A THREAD TO CREATE A PARALLEL PROCESSING
+			self.searching_thread = threading.Thread(target=partial(self.search_files_function, type_selection, kind_selection, name_selection))
+			self.searching_thread.start()
+
+			#LOCAL LAUNCHING OF THE SEARCHING FUNCTION
+			#self.search_files_function(type_selection, kind_selection, name_selection)
 
 
 
@@ -544,6 +551,7 @@ class PipelineApplication:
 	def search_files_function(self, type_selection, kind_selection, name_selection):
 		#get the content of all checkbox
 		#to define the searching field
+		index_checkbox_value = mc.checkBox(self.index_checkbox, query=True, value=True)
 		project_limit = mc.checkBox(self.searchbar_checkbox, query=True, value=True)
 		folder_limit = mc.checkBox(self.folder_checkbox, query=True, value=True)
 
@@ -644,8 +652,11 @@ class PipelineApplication:
 			extension_list += self.additionnal_settings["3dItemExtension"]
 		#define the number of files from the starting folder
 		total_files = 0
-		for folder in starting_folder:
-			total_files += int(sum([len(files) for root, dirs, files in os.walk(folder)]))
+		if index_checkbox_value == False:
+			for folder in starting_folder:
+				total_files += int(sum([len(files) for root, dirs, files in os.walk(folder)]))
+		else:
+			total_files = len(list(self.pipeline_index.keys()))
 		i = 0
 
 
@@ -660,163 +671,62 @@ class PipelineApplication:
 		final_file_list = []
 		final_name_list = []
 		
-		
-		
-		
 		for folder in starting_folder:
 			print("searching in [%s]"%folder)
-			p = 0 
-			total_files = int(sum([len(files) for root, dirs, files in os.walk(folder)]))
-			
-			if total_files != 0:
-				self.progress_bar = mc.progressWindow(title="Processing...", progress=0, status="Starting", min=0, max=total_files)
-			
-			for r, d, f in os.walk(folder):
-				
+			#p = 0 
 
-				if ("PipelineManagerData" in d)==True:
-					d.remove("PipelineManagerData")
-
-				for file in f:
-					p+=1
-					print("[%s | %s]		checking - %s"%(p, total_files, file))
-					mc.progressWindow(edit=True, progress=p, status="Processing...")
-					#get files information
-					file_path = os.path.dirname(file)
-					file_name = os.path.splitext(os.path.basename(file))[0]
-					file_extension = os.path.splitext(file)[1]
-					#check if extension of the file is in the list
-					if (len(extension_list)!= 0) and (file_extension in extension_list)==False:
-						continue
-					
-					#split de filename to check the len of the syntax
-					#get the syntax and the keyword of the current type
-					if type_selection != None:
-						for t in type_selection:
-							error=False
-							syntax = self.settings[t][0]
-							keyword = self.settings[t][1]
-
-							splited_filename = file_name.split("_")
-							splited_syntax = syntax.split("_")
-
-							
-
-							if len(splited_filename) != len(splited_syntax):
-								error=True
-								continue
-
-							#DISPLAY ONLY FILES WITH THE RIGHT SIZE
-							#print("\nNEW FILE - %s"%file)
-							#print("[key]" in splited_syntax)
-
-
-
-
-
-							if "[type]" in splited_syntax:
-								type_index = splited_syntax.index("[type]")
-								"""
-								if no type is selected then 
-								skip the type error
-								"""
-								if kind_selection == None:
-									pass
-								#print(splited_filename[type_index], splited_filename[type_index] in kind_selection, kind_selection)
-								elif (splited_filename[type_index] in kind_selection)==False:
-									error=True 
-									print("ERROR type %s" % file)
-									continue
-
-
-							if "[key]" in splited_syntax:
-								key_index = splited_syntax.index("[key]")
-
-								#print(splited_filename[key_index], keyword)
-								if splited_filename[key_index] != keyword:
-									print("ERROR key %s" % file)
-									error=True 
-									#print("keyword error")
-									continue
-								else:
-									print(file)
-
-
-							#check the whole syntax of the file
-							if "[project]" in splited_syntax:
-								project_index = splited_syntax.index("[project]")
-								#print(splited_filename[keyword_index], project_name)
-								if splited_filename[project_index] != project_name:
-									print("ERROR project %s" % file)
-									error=True 
-									continue
-
-							if "[version]" in splited_syntax:	
-								version_index = splited_syntax.index("[version]")
-
-								if (splited_filename[version_index]) != "publish":
-									if (len(splited_filename[version_index].split("v")) == 2):
-										if (splited_filename[version_index].split("v")[0] != "") or (splited_filename[version_index].split("v")[1].isdigit()==False):
-											print("ERROR version %s" % file)
-											error=True
+			#total_files = int(sum([len(files) for root, dirs, files in os.walk(folder)]))
 		
-											continue
-									else:
+			if index_checkbox_value == False:
+				print("PIPELINE CHECKING")
+				for r, d, f in os.walk(folder):
+					if ("PipelineManagerData" in d)==True:
+						d.remove("PipelineManagerData")
+					for file in f:
+						value = self.parse_file_function(file)
+						print(value, file)
+						
+						if value != False:
+							print("name detected : %s"%value)
+							final_file_list.append(file)
+							final_name_list.append(value)
 
-										error=True
-										continue
+			else:
+				"""
+				check all the files in the index
+				check that theses files are matching 
+				with the selection in the textscrolllist
+				"""
+				file_pipeline_index = list(self.pipeline_index.keys())
+				for file in file_pipeline_index:
+					value = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection)
+					if value != False:
+						#check if the path of the file is in the starting path
+						file_path = self.pipeline_index[file]["path"]
+						
+						display = True
+						#check if the project folder is checked
+						#process the verification to check that only the project files are displayed
+						if project_limit==True:
+							try:
+								common_path = os.path.commonpath([starting_folder, file_path])
+								if common_path != starting_folder:
+									display = False
+							except:
+								pass
 
-							if "[sqversion]" in splited_syntax:
-								version_index = splited_syntax.index(["sqversion"])
-								if (len(splited_filename[version_index].split("sq"))==2):
-									if (splited_filename[version_index].split("sq")[0] != "") or (splited_filename[version_index].split("sq")[1].isdigit()==False):
-										error=True 
-
-										continue
-							if "[shversion]" in splited_syntax:
-								version_index = splited_syntax.index(["shversion"])
-								if (len(splited_filename[version_index].split("sh"))==2):
-									if (splited_filename[version_index].split("sh")[0] != "") or (splited_filename[version_index].split("sh")[1].isdigit()==False):
-										error=True 
-
-										continue
-							#check that the file is contained in name list selection
-							if (name_selection != None):
-								#check the name keyword in the syntax
-								if ( "[name]" in splited_syntax ) == False:
-									print("ERROR name %s" % file)
-									error=True
-									continue
-								else:
-									
-									
-									if (splited_filename[splited_syntax.index("[name]")] in name_selection) == False:
-										print("ERROR name %s" % file)
-										error=True 
-										continue
-
-									
-
-
-							if ("[name]" in splited_syntax) and (error == False):
-								name = splited_filename[splited_syntax.index("[name]")]
-								if (name in final_name_list)==False:
-									final_name_list.append(name)
-
-
-							if ("[artist]" in splited_syntax):
-								artist_name = splited_filename[splited_syntax.index("[artist]")]
-								print(artist_name)
-							
-
+						if display == True:	
+							if file not in final_file_list:
+								final_file_list.append(file)
+							if value not in final_name_list:
+								final_name_list.append(value)
 
 					
+				
+					
 
-
-						if error == False:
-							#print("FILE CHECKED - %s" % file)
-							final_file_list.append(file)
-
+		
+		
 		print("\nSEARCHING DONE!!!\n")
 		mc.progressWindow(endProgress=True)
 
@@ -842,6 +752,83 @@ class PipelineApplication:
 					mc.textScrollList(self.name_list, edit=True, removeAll=True, append=final_name_list)
 		except:
 			pass
+
+
+
+
+
+
+	def check_syntax_from_selection_function(self, file, type_selection, kind_selection, name_selection):
+		#get the selection in textscrolllist
+		error=False
+		final_name = None
+		splited_file = file.split("_")
+		
+		if type_selection != None:
+			for type in type_selection:
+				#get the syntax for the given type
+				type_syntax = self.settings[type][0]
+				splited_type_syntax = type_syntax.split("_")
+
+				#get the index of the keyword in the syntax
+				try:
+					type_index = splited_type_syntax.index('[key]')
+				except:
+					mc.error("No key in the syntax!")
+					return
+				#print(splited_file[type_index], type)
+
+
+				if splited_file[type_index] != type:
+					error=True 
+				else:
+					#detect the filename of the current file
+					if '[name]' in splited_type_syntax:
+						final_name = splited_file[splited_type_syntax.index('[name]')]
+						#print("FOUND A NAME %s"%final_name)
+
+
+
+		if kind_selection != None:
+			for kind in kind_selection:
+				
+				try:
+					kind_index = splited_type_syntax.index('[type]')
+				except:
+					mc.error("No kind in the syntax!")
+					return
+				if splited_file[kind_index] != kind:
+					error=True
+
+
+		if name_selection != None:
+			for name in name_selection:
+				try:
+					name_index = splited_type_syntax.index("[name]")
+				except:
+					mc.error("No name in the syntax!")
+					return
+
+				if splited_file[name_index] != name:
+					error=True
+
+		
+
+
+
+
+		if error==True:
+			return False 
+		else:
+			return final_name
+
+
+
+		
+
+
+
+
 		
 				
 
@@ -3099,6 +3086,7 @@ class PipelineApplication:
 
 					print("Archive size before : %s"%archive_size_before)
 					print("Archive size after : %s\n"%archive_size_after)
+
 
 
 

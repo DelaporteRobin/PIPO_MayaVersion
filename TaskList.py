@@ -17,7 +17,7 @@ FEATURES TO CREATE
 
 - create an explorer on the whole computer
 
-- namespaces when importing
+- namespaces when importingO
 - real incrementation system (with one button)
 
 - dockable windows / sizeable?
@@ -34,7 +34,16 @@ FEATURES TO CREATE
 - Shading (file parsing add extension)
    Fix automatic mode filenames!
 
-- Find an other searching file system and apply it to everything!
+- CREATING THE INDEXATION SYSTEM
+   1 - When starting Pipo check if the index exists
+         if not --> create it
+   2 - When starting Pipo launch the observer watchdog
+         and modify the index according to the modification made on the drive
+            - addition
+            - deletion
+            - rename
+            - change location
+   3 - When searching check first in the index
 
 
 
@@ -47,3 +56,4 @@ DOCUMENTATION TO UPDATE
    and connecting textures!!
 """
 		
+"[Origin]/04_asset/[key]/[name]/[mayaProjectName]/scenes/[editPublishFolder]/[type]"
