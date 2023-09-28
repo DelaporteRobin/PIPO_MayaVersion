@@ -612,14 +612,14 @@ class PipelineApplication:
 				#print(default_folder_splited)
 				final_default_folder = []
 
-				print(default_folder_splited)
+				#print(default_folder_splited)
 				for item in default_folder_splited:
 					if item in default_folder_variable_list:
 						break
 					else:
 						final_default_folder.append(item)
 				print("Default Folder defined")
-				print(final_default_folder)
+				#print(final_default_folder)
 				starting_folder = ["/".join(final_default_folder)]
 				#print(starting_folder)
 		else:
@@ -809,8 +809,11 @@ class PipelineApplication:
 					mc.error("No name in the syntax!")
 					return
 
-				if splited_file[name_index] != name:
-					error=True
+				if len(splited_file) == len(splited_type_syntax):
+					if splited_file[name_index] != name:
+						error=True
+
+
 
 		
 
