@@ -1875,40 +1875,76 @@ class PipelineApplication:
 				os.chdir(filepath)
 				mc.warning("Project path set to : %s"%filepath)
 			return
-		for r, d, f in os.walk(pipeline_path):
-			for file in f:
-				if os.path.basename(file) == selection:
-					original_path = os.getcwd()
 
-					"""
-					go to path of the file
-					"""
-					os.chdir(r)
-					path = os.getcwd()
-					defined = False
-					for i in range(0, len(r.split("/"))+1):
-						#print(os.getcwd(), os.path.basename(path), project_name)
-						if os.path.basename(path) == project_name:
-							#set project here!!!
+		"""
+		if index mode is selected
+			go through the files in the index
+			get the path
+			find the maya project keyword inside
+		"""
+		index_checkbox = mc.checkBox(self.index_checkbox, query=True, value=True)
+		if index_checkbox == True :
+			for file, data in self.pipeline_index.items():
+				if file == selection:
+					#get the path of the file
+					#get the maya keyword inside
+					path = data["path"]
+					splited_path = path.split("/")
+					#get maya project index
+					if project_name not in splited_path:
+						mc.error("Impossible to find maya project keyword in path!")
+						return 
+					else:
+						try:
+							maya_project_index = splited_path.index(project_name)
+							project_path = "/".join(splited_path[:maya_project_index+1])
 							try:
-								mc.workspace(path, openWorkspace=True, n=True)
+								mc.workspace(project_path, openWorkspace=True, n=True)
 							except:
 								try:
-									mc.workspace(path, openWorkspace=True)
+									mc.workspace(project_path, openWorkspace=True)
 								except:
 									mc.error("Impossible to set the project!")
 									return
-							mc.warning("Project path set to : %s"%path)
-							defined=True
+								print("Project path set to : %s"%project_path)
+						except:
+							mc.error("Impossible to set project!")
+							return
+		else:
+			for r, d, f in os.walk(pipeline_path):
+				for file in f:
+					if os.path.basename(file) == selection:
+						original_path = os.getcwd()
+
+						"""
+						go to path of the file
+						"""
+						os.chdir(r)
+						path = os.getcwd()
+						defined = False
+						for i in range(0, len(r.split("/"))+1):
+							#print(os.getcwd(), os.path.basename(path), project_name)
+							if os.path.basename(path) == project_name:
+								#set project here!!!
+								try:
+									mc.workspace(path, openWorkspace=True, n=True)
+								except:
+									try:
+										mc.workspace(path, openWorkspace=True)
+									except:
+										mc.error("Impossible to set the project!")
+										return
+								mc.warning("Project path set to : %s"%path)
+								defined=True
+								
+
 							
+							path = os.path.normpath(path+os.sep+os.pardir)
+							os.chdir(path)
 
-						
-						path = os.path.normpath(path+os.sep+os.pardir)
-						os.chdir(path)
-
-					if defined==False:
-						mc.error("Impossible to find a project folder for that file!")
-						return
+						if defined==False:
+							mc.error("Impossible to find a project folder for that file!")
+							return
 
 
 	def open_file_function(self, event):
