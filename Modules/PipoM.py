@@ -2648,6 +2648,8 @@ class PipelineApplication:
 		try:
 			with open(os.path.join(project_name, "PipelineManagerData/Template.dll"), "rb") as read_file:
 				template_dictionnary = pickle.load(read_file)
+		
+
 			mc.textScrollList(self.template_textscrolllist, edit=True, removeAll=True, append=list(template_dictionnary.keys()))
 		except:
 			mc.warning("Impossible to read template file!")

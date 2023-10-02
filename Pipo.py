@@ -167,7 +167,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 				
 			
 		else:
-			self.pipo_shelf = cmds.shelfLayout("PipoShelf", query=True, fullPathName=True)
+			self.pipo_shelf = mc.shelfLayout("PipoShelf", query=True, fullPathName=True)
 
 		
 
@@ -763,17 +763,24 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.button(label="Save new template", parent=self.template_frame, command=self.create_template_function)
 		mc.button(label="Delete template", parent=self.template_frame, command=self.delete_template_function)
 		mc.separator(style="none", height=10, parent=self.template_frame)
-		self.template_textscrolllist = mc.textScrollList(numberOfRows=5, parent=self.template_frame)
+		
 		self.template_fromselection_checkbox = mc.checkBox(label="Create from outliner selection", parent=self.template_frame, value=False)
 		mc.button(label="Create new item", parent=self.template_frame, command=self.create_new_item_template_function)
 
-		self.reload_template_function()
-
 		
+
+		mc.separator(style="none", height=15, parent=self.export_leftcolumn)
+		self.template_textscrolllist = mc.textScrollList(numberOfRows=10, parent=self.export_leftcolumn)
 		self.export_edit_name_checkbox = mc.checkBox(label="Keep same name", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=True, parent=self.export_leftcolumn)
 		mc.separator(style="singleDash", height=2, parent=self.export_leftcolumn)
-		mc.text(label="File Name", align="left", parent=self.export_leftcolumn)
+		mc.text(label="Item Name", align="left", parent=self.export_leftcolumn)
 		self.export_edit_name_textfield = mc.textField(parent=self.export_leftcolumn)
+
+		mc.separator(style="none", height=15, parent=self.export_leftcolumn)
+		mc.button(label="Create New Item", parent=self.export_leftcolumn, command=self.create_new_item_template_function)
+		mc.button(label="Create New Item and Export", parent=self.export_leftcolumn)
+
+		self.reload_template_function()
 
 
 		self.export_edit_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Export edit files", parent=self.export_leftcolumn, collapsable=True, collapse=True)	
