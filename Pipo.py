@@ -851,40 +851,39 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 	
 	def apply_user_settings_function(self):
 		if (self.program_folder != None) and (self.program_folder != "None"):
+			try:
+				mc.checkBox(self.searchbar_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][0])
+				mc.checkBox(self.folder_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][1])
+				mc.checkBox(self.scenes_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][2])
+				mc.checkBox(self.items_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][3])
+				mc.checkBox(self.textures_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][4])
+
+				mc.checkBox(self.hardrename_checkbox_file, edit=True, value=self.user_settings["checkboxValuesRenamePanel"][0])
+				mc.checkBox(self.hardrename_checkbox_folder, edit=True, value=self.user_settings["checkboxValuesRenamePanel"][1])
+
+				mc.checkBox(self.render_texture_manual_checkbox, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][0])
+				mc.checkBox(self.render_texture_automatic_checkbox, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][1])
+				mc.checkBox(self.render_texture_limit_project, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][2])
+				mc.checkBox(self.render_texture_udim_checking, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][3])
+
+				mc.checkBox(self.render_checking_checkbox, edit=True, value=self.user_settings["checkboxValuesMissingFramesPanel"][0])
+
+				mc.checkBox(self.export_current_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][0])
+				mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][1])
+				mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][2])
+				mc.checkBox(self.template_fromselection_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][3])
+				mc.checkBox(self.export_edit_name_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][4])
+
+
+				favorite_files = self.user_settings["FavoriteFiles"]
+				favorite_file_list = list(favorite_files.keys())
+				mc.textScrollList(self.favorite_list, edit=True, removeAll=True, append=favorite_file_list)
+
 			
-			mc.checkBox(self.searchbar_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][0])
-			mc.checkBox(self.folder_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][1])
-			mc.checkBox(self.scenes_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][2])
-			mc.checkBox(self.items_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][3])
-			mc.checkBox(self.textures_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][4])
-
-			mc.checkBox(self.hardrename_checkbox_file, edit=True, value=self.user_settings["checkboxValuesRenamePanel"][0])
-			mc.checkBox(self.hardrename_checkbox_folder, edit=True, value=self.user_settings["checkboxValuesRenamePanel"][1])
-
-			mc.checkBox(self.render_texture_manual_checkbox, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][0])
-			mc.checkBox(self.render_texture_automatic_checkbox, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][1])
-			mc.checkBox(self.render_texture_limit_project, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][2])
-			mc.checkBox(self.render_texture_udim_checking, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][3])
-
-			mc.checkBox(self.render_checking_checkbox, edit=True, value=self.user_settings["checkboxValuesMissingFramesPanel"][0])
-
-			mc.checkBox(self.export_current_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][0])
-			mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][1])
-			mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][2])
-			mc.checkBox(self.template_fromselection_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][3])
-			mc.checkBox(self.export_edit_name_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][4])
-
-
-			favorite_files = self.user_settings["FavoriteFiles"]
-			favorite_file_list = list(favorite_files.keys())
-			mc.textScrollList(self.favorite_list, edit=True, removeAll=True, append=favorite_file_list)
-
-			"""
 			except:
-				mc.error("Impossible to apply user settings on GUI!")
+				mc.warning("Impossible to apply user settings on GUI!")
 				return
-			"""
-
+			
 
 
 	def update_archive_checkbox_function(self, command, event):

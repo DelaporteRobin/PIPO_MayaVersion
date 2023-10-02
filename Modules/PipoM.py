@@ -63,7 +63,7 @@ class PipelineApplication:
 	def load_settings_function(self):
 		if (self.project_path == None) or (self.project_path == "None"):
 			mc.warning("Impossible to load settings!")
-			return None, None, None, None
+			return None, None, None, None, None
 		else:
 			
 			if type(self.project_path)==list:
