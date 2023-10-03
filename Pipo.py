@@ -742,7 +742,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.separator(style="none", height=20, parent=self.export_leftcolumn)
 		self.export_current_folder_checkbox = mc.checkBox(label="Export in current folder",value=False, parent=self.export_leftcolumn, changeCommand=partial(self.change_export_checkbox_value_function, "current"))
 		self.export_custom_folder_checkbox = mc.checkBox(label="Export in custom folder", value=False, parent=self.export_leftcolumn, changeCommand=partial(self.change_export_checkbox_value_function, "custom"))
-		self.export_assist_folder_checkbox = mc.checkBox(label="Default folder location assist", value=True, parent=self.export_leftcolumn, changeCommand=partial(self.change_export_checkbox_value_function, "assist"))
+		self.export_assist_folder_checkbox = mc.checkBox(label="Default folder\nlocation assist", value=True, parent=self.export_leftcolumn, changeCommand=partial(self.change_export_checkbox_value_function, "assist"))
+		self.export_projectassist_folder_checkbox = mc.checkBox(label="Current project\ndefault folder", value=False, parent=self.export_leftcolumn, changeCommand=partial(self.change_export_checkbox_value_function, "projectassist"))
 		mc.separator(style="none", height=10, parent=self.export_leftcolumn)
 
 		mc.text(label="Current artist name", parent=self.export_leftcolumn, align="left")
@@ -765,20 +766,20 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.separator(style="none", height=10, parent=self.template_frame)
 		
 		self.template_fromselection_checkbox = mc.checkBox(label="Create from outliner selection", parent=self.template_frame, value=False)
-		mc.button(label="Create new item", parent=self.template_frame, command=self.create_new_item_template_function)
+		mc.separator(style="singleDash", height=5, parent=self.template_frame)
 
 		
 
 		mc.separator(style="none", height=15, parent=self.export_leftcolumn)
-		self.template_textscrolllist = mc.textScrollList(numberOfRows=10, parent=self.export_leftcolumn)
+		self.template_textscrolllist = mc.textScrollList(numberOfRows=5, parent=self.export_leftcolumn)
 		self.export_edit_name_checkbox = mc.checkBox(label="Keep same name", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=True, parent=self.export_leftcolumn)
 		mc.separator(style="singleDash", height=2, parent=self.export_leftcolumn)
 		mc.text(label="Item Name", align="left", parent=self.export_leftcolumn)
 		self.export_edit_name_textfield = mc.textField(parent=self.export_leftcolumn)
 
 		mc.separator(style="none", height=15, parent=self.export_leftcolumn)
-		mc.button(label="Create New Item", parent=self.export_leftcolumn, command=self.create_new_item_template_function)
-		mc.button(label="Create New Item and Export", parent=self.export_leftcolumn)
+		mc.button(label="Create New Item architecture", parent=self.export_leftcolumn, command=partial(self.create_new_item_template_function, False))
+		#mc.button(label="Create New Item  architeture\nand Export", parent=self.export_leftcolumn, command=partial(self.create_new_item_template_function, True))
 
 		self.reload_template_function()
 
@@ -878,8 +879,9 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 				mc.checkBox(self.export_current_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][0])
 				mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][1])
 				mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][2])
-				mc.checkBox(self.template_fromselection_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][3])
-				mc.checkBox(self.export_edit_name_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][4])
+				mc.checkBox(self.template_fromselection_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][4])
+				mc.checkBox(self.export_edit_name_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][5])
+				mc.checkBox(self.export_projectassist_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][3])
 
 
 				favorite_files = self.user_settings["FavoriteFiles"]
@@ -925,13 +927,21 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			if mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True)==True:
 				mc.checkBox(self.export_current_folder_checkbox, edit=True, value=False)
 				mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=False)
+				mc.checkBox(self.export_projectassist_folder_checkbox, edit=True, value=False)
 		elif command == "current":
 			if mc.checkBox(self.export_current_folder_checkbox, query=True, value=True)==True:
 				mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=False)
 				mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=False)
+				mc.checkBox(self.export_projectassist_folder_checkbox, edit=True, value=False)
 		elif command == "assist":
 			if mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True)==True:
 				mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=False)
+				mc.checkBox(self.export_current_folder_checkbox, edit=True, value=False)
+				mc.checkBox(self.export_projectassist_folder_checkbox, edit=True, value=False)
+		elif command == "projectassist":
+			if mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True)==True:
+				mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=False)
+				mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=False)
 				mc.checkBox(self.export_current_folder_checkbox, edit=True, value=False)
 		self.save_additionnal_settings_function("none", "none")
 		

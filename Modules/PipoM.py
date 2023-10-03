@@ -287,7 +287,7 @@ class PipelineApplication:
 			"checkboxValuesRenamePanel":[False, False],
 			"checkboxValuesTextureLinkingPanel":[True, False, True, True],
 			"checkboxValuesMissingFramesPanel":[False],
-			"checkboxValuesExportPanel":[False, False, True, False, False],
+			"checkboxValuesExportPanel":[False, False, True, False, False, False],
 			"FavoriteFiles":{},
 			"ExportRaimbow":True,
 			"ExportWebsite":True,
@@ -389,7 +389,7 @@ class PipelineApplication:
 			"checkboxValuesRenamePanel":[False, False],
 			"checkboxValuesTextureLinkingPanel":[True, False, True, True],
 			"checkboxValuesMissingFramesPanel":[False],
-			"checkboxValuesExportPanel":[False, False, True, False, False],
+			"checkboxValuesExportPanel":[False, False, True, False, False, False],
 			"FavoriteFiles":{},
 			"ExportRaimbow":True,
 			"ExportWebsite":True,
@@ -2086,7 +2086,7 @@ class PipelineApplication:
 		self.user_settings["checkboxValuesRenamePanel"] = [mc.checkBox(self.hardrename_checkbox_file, query=True, value=True), mc.checkBox(self.hardrename_checkbox_folder, query=True, value=True)]
 		self.user_settings["checkboxValuesTextureLinkingPanel"] = [mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True), mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True), mc.checkBox(self.render_texture_limit_project, query=True, value=True), mc.checkBox(self.render_texture_udim_checking, query=True, value=True)]
 		self.user_settings["checkboxValuesMissingFramesPanel"] = [mc.checkBox(self.render_checking_checkbox, query=True, value=True)]
-		self.user_settings["checkboxValuesExportPanel"] = [mc.checkBox(self.export_current_folder_checkbox, query=True, value=True), mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True), mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True), mc.checkBox(self.template_fromselection_checkbox, query=True, value=True), mc.checkBox(self.export_edit_name_checkbox, query=True, value=True)]
+		self.user_settings["checkboxValuesExportPanel"] = [mc.checkBox(self.export_current_folder_checkbox, query=True, value=True), mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True), mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True), mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True), mc.checkBox(self.template_fromselection_checkbox, query=True, value=True), mc.checkBox(self.export_edit_name_checkbox, query=True, value=True)]
 
 		"""
 		self.default_additional_settings = {
@@ -2240,9 +2240,10 @@ class PipelineApplication:
 		kind_selection = mc.textScrollList(self.export_kind_textscrolllist, query=True, si=True)
 		splited_filename = os.path.splitext(os.path.basename(mc.file(query=True, sn=True)))[0].split("_")
 
-		if type_selection == None:
-			mc.error("You have to select a type!")
-			return
+		if (mc.checkBox(self.export_projectassist_folder_checkbox)==False):
+			if type_selection == None:
+				mc.error("You have to select a type!")
+				return
 
 		nomenclature = self.settings[type_selection[0]]
 		if (("[type]") in nomenclature) and (kind_selection == None):
@@ -2265,7 +2266,7 @@ class PipelineApplication:
 			else:
 				return folder
 				#folder = mc.workspace(query=True, active=True)
-		if mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True)==True:
+		if (mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True)==True) or (mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True)==True):
 			final_filepath = []
 			#check the value of the default folder
 			default_folder_path = self.settings[type_selection[0]][2]
@@ -2353,6 +2354,26 @@ class PipelineApplication:
 				#PROPER VALUES
 				else:
 					final_filepath.append(splited_default_folder[i])
+
+			if mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True)==True:
+				#check the current path of the scene
+				#get the maya project
+				maya_project_name = mc.workspace(query=True, active=True)
+				if os.path.isdir(maya_project_name)==False:
+					mc.error("Impossible to get current maya project folder!")
+					return
+				#get project index
+				maya_project_index = final_filepath.index(self.additionnal_settings["mayaProjectName"])
+				end_of_path = final_filepath[maya_project_index:]
+				end_of_path.pop(0)
+
+				final_filepath = "%s/"%maya_project_name + "/".join(end_of_path)
+				
+				print("RESULT INFORMATIONS")
+				print(final_filepath)	
+				
+			
+				return final_filepath
 
 			return "/".join(final_filepath)
 
@@ -2696,10 +2717,10 @@ class PipelineApplication:
 
 
 
-	def create_new_item_template_function(self, event):
+	def create_new_item_template_function(self, command, event):
 		#get informations to create new item architecture
 		if mc.checkBox(self.template_fromselection_checkbox, query=True, value=True)==False:
-			item_name = [mc.textField(self.template_textfield, query=True, text=True)]
+			item_name = [mc.textField(self.export_edit_name_textfield, query=True, text=True)]
 		else:
 			item_name = mc.ls(sl=True)
 		template_name = mc.textScrollList(self.template_textscrolllist, query=True, si=True)
@@ -2790,6 +2811,9 @@ class PipelineApplication:
 					except:
 						mc.warning("Failed to create folder [%s]"%folder)
 						continue
+
+				#try to save the first edit file inside that folder architecture
+
 
 
 

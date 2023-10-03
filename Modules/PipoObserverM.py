@@ -275,16 +275,20 @@ class MyHandler(FileSystemEventHandler):
 
 	def delete_ghost_files_function(self):
 		#print("\nDELETE ALL GHOST FILES IN INDEX\n")
-		for file, data in self.pipo.pipeline_index.items():
-			full_path = os.path.join(data["path"], file)
-	
-			if os.path.isfile(full_path) == False:
-				
+		try:
+			for file, data in self.pipo.pipeline_index.items():
+				full_path = os.path.join(data["path"], file)
+		
+				if os.path.isfile(full_path) == False:
+					
 
-				try:
-					del self.pipo.pipeline_index[file]
-				except:
-					pass 	
+					try:
+						del self.pipo.pipeline_index[file]
+					except:
+						pass 
+		except:
+			print("Impossible to check ghost files now!")
+			pass	
 
 	def on_moved(self, event):
 		#replace the old value by the new value

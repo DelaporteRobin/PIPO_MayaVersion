@@ -1,7 +1,7 @@
 {
     "dict1": {
         "checkboxValuesMainPage": [
-            false,
+            true,
             false,
             true,
             false,
@@ -23,11 +23,14 @@
         "checkboxValuesExportPanel": [
             false,
             false,
-            true,
             false,
-            true
+            true,
+            true,
+            false
         ],
-        "FavoriteFiles": {},
+        "FavoriteFiles": {
+            "set_LightingSet_lookdev_publish.ma": "//storage/esma/3D4/trash/04_asset/set/LightingSet/maya/scenes/publish/lookdev/set_LightingSet_lookdev_publish.ma"
+        },
         "ExportRaimbow": true,
         "ExportWebsite": true
     }
