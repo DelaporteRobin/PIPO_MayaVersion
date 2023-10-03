@@ -39,6 +39,10 @@ class PipelineObserverApplication:
 		for key, value in self.settings.items():
 
 			error=False
+			saved_key = None
+			saved_type = None
+			saved_name = None
+
 			syntax = value[0]
 			splited_syntax = syntax.split("_")
 			#print(splited_syntax)
@@ -57,6 +61,8 @@ class PipelineObserverApplication:
 					#print("type error")
 					error=True
 					continue
+				else:
+					saved_type = splited_filename[index]
 
 			if "[key]" in splited_syntax:
 				index = splited_syntax.index("[key]")
@@ -124,7 +130,7 @@ class PipelineObserverApplication:
 					continue
 
 			if error==False:
-				return file_name
+				return (file_name, key, saved_type)
 		return False
 			
 		

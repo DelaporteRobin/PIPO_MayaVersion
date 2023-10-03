@@ -684,12 +684,46 @@ class PipelineApplication:
 						d.remove("PipelineManagerData")
 					for file in f:
 						value = self.parse_file_function(file)
-						print(value, file)
+						
 						
 						if value != False:
-							print("name detected : %s"%value)
+							filename = value[0]
+							key = value[1]
+							saved_type = value[2]
+							#split the checked filename and check if the keyword name and type are the right ones
+							splited_filename = file.split("_")
+							splited_syntax = self.settings[key][0].split("_")
+
+							if type_selection != None:
+								if "[key]" in splited_syntax:
+									key_index = splited_syntax.index("[key]")
+									if splited_filename[key_index] not in type_selection:
+										#print("key error %s %s"%(splited_filename, type_selection))
+										continue
+
+							if name_selection != None:
+								if "[name]" in splited_syntax:
+									name_index = splited_syntax.index("[name]")
+									if splited_filename[name_index] not in name_selection:
+										#print("name error %s %s"%(splited_filename[name_index], name_selection))
+										continue
+							
+							if kind_selection != None:
+								if "[type]" in splited_syntax:
+									kind_index = splited_syntax.index("[type]")
+									if splited_filename[kind_index] not in kind_selection:
+										#print("type error %s %s"%(splited_filename[kind_index], kind_selection))
+										continue
+							
+							
+							
+							print("no error detected for %s"%filename)
+							
+							
 							final_file_list.append(file)
-							final_name_list.append(value)
+							final_name_list.append(filename)
+							
+							
 
 			else:
 				"""
@@ -708,24 +742,37 @@ class PipelineApplication:
 						#check if the project folder is checked
 						#process the verification to check that only the project files are displayed
 						if project_limit==True:
+							#print("project limit detected!")
+							"""
+							print("\nChecking file!")
+							print(starting_folder[0])
+							print(file_path)
+							"""
 							try:
-								common_path = os.path.commonpath([starting_folder, file_path])
-								if common_path != starting_folder:
+								common_path = os.path.commonpath([starting_folder[0], file_path])
+								#print(os.path.normpath(common_path) == os.path.normpath(starting_folder[0]), os.path.normpath(common_path), os.path.normpath(starting_folder[0]))
+								if os.path.normpath(common_path)!= os.path.normpath(starting_folder[0]):
 									display = False
-							except:
-								pass
+								
+							except ValueError:
+								display=False
+							
+							
+							
 
 						if display == True:	
+							#print("file matching [%s]"%file)
 							if file not in final_file_list:
 								final_file_list.append(file)
 							if value not in final_name_list:
 								final_name_list.append(value)
+				
 
 					
 				
 					
 
-		
+		print(final_name_list)
 		
 		print("\nSEARCHING DONE!!!\n")
 		mc.progressWindow(endProgress=True)
@@ -739,6 +786,8 @@ class PipelineApplication:
 		#update the name list!!!
 		#print(name_selection, self.current_name)
 		#print(type_selection, self.current_type)
+		 
+
 		try:
 			if (type_selection[0] != self.current_type):
 				self.current_type = type_selection[0]
