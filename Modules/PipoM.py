@@ -15,6 +15,7 @@ import zipfile
 import shutil
 import webbrowser
 import threading
+import subprocess
 
 from random import randrange
 from time import sleep
@@ -694,12 +695,18 @@ class PipelineApplication:
 							splited_filename = file.split("_")
 							splited_syntax = self.settings[key][0].split("_")
 
-							if type_selection != None:
-								if "[key]" in splited_syntax:
-									key_index = splited_syntax.index("[key]")
-									if splited_filename[key_index] not in type_selection:
-										#print("key error %s %s"%(splited_filename, type_selection))
-										continue
+							validate = False
+							for setting_key, setting_value in self.settings.items():
+
+								type = setting_value[1]
+								if type_selection != None:
+									if "[key]" in splited_syntax:
+										key_index = splited_syntax.index("[key]")
+										
+										if splited_filename[key_index] == type:
+											validate = True 
+							if validate == False:
+								continue
 
 							if name_selection != None:
 								if "[name]" in splited_syntax:
@@ -719,9 +726,12 @@ class PipelineApplication:
 							
 							print("no error detected for %s"%filename)
 							
-							
-							final_file_list.append(file)
-							final_name_list.append(filename)
+							if file not in final_file_list:
+								final_file_list.append(file)
+							if filename not in final_name_list:
+								final_name_list.append(filename)
+							#final_file_list.append(file)
+							#final_name_list.append(filename)
 							
 							
 
@@ -734,6 +744,9 @@ class PipelineApplication:
 				file_pipeline_index = list(self.pipeline_index.keys())
 				for file in file_pipeline_index:
 					value = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection)
+
+					#print(value, file)
+					
 					if value != False:
 						#check if the path of the file is in the starting path
 						file_path = self.pipeline_index[file]["path"]
@@ -743,11 +756,7 @@ class PipelineApplication:
 						#process the verification to check that only the project files are displayed
 						if project_limit==True:
 							#print("project limit detected!")
-							"""
-							print("\nChecking file!")
-							print(starting_folder[0])
-							print(file_path)
-							"""
+							
 							try:
 								common_path = os.path.commonpath([starting_folder[0], file_path])
 								#print(os.path.normpath(common_path) == os.path.normpath(starting_folder[0]), os.path.normpath(common_path), os.path.normpath(starting_folder[0]))
@@ -756,6 +765,8 @@ class PipelineApplication:
 								
 							except ValueError:
 								display=False
+
+
 							
 							
 							
@@ -827,8 +838,9 @@ class PipelineApplication:
 					return
 				#print(splited_file[type_index], type)
 
-
-				if splited_file[type_index] != type:
+				#print(self.settings[type][1], splited_file[type_index])
+				#print(self.settings[type][1])
+				if splited_file[type_index] != self.settings[type][1]:
 					error=True 
 				else:
 					#detect the filename of the current file
@@ -838,29 +850,29 @@ class PipelineApplication:
 
 
 
-		if kind_selection != None:
-			for kind in kind_selection:
-				
-				try:
-					kind_index = splited_type_syntax.index('[type]')
-				except:
-					mc.error("No kind in the syntax!")
-					return
-				if splited_file[kind_index] != kind:
-					error=True
-
-
-		if name_selection != None:
-			for name in name_selection:
-				try:
-					name_index = splited_type_syntax.index("[name]")
-				except:
-					mc.error("No name in the syntax!")
-					return
-
-				if len(splited_file) == len(splited_type_syntax):
-					if splited_file[name_index] != name:
+			if kind_selection != None:
+				for kind in kind_selection:
+					
+					try:
+						kind_index = splited_type_syntax.index('[type]')
+					except:
+						mc.error("No kind in the syntax!")
+						return
+					if splited_file[kind_index] != kind:
 						error=True
+
+
+			if name_selection != None:
+				for name in name_selection:
+					try:
+						name_index = splited_type_syntax.index("[name]")
+					except:
+						mc.error("No name in the syntax!")
+						return
+
+					if len(splited_file) == len(splited_type_syntax):
+						if splited_file[name_index] != name:
+							error=True
 
 
 
@@ -1000,24 +1012,28 @@ class PipelineApplication:
 			return 
 
 
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==False:
+			#try to find file in the folder
+			for item in file_selection:
+				for r, d, f in os.walk(folder_name):
+					for file in f:
+						if file == item:
+							self.add_log_content_function("[%s] File found in project" % item)
+							if os.path.isfile(os.path.join(r, item)):
+								try:
+									if command==False:
+										mc.file(os.path.join(r, item), i=True)
+									if command==True:
+										mc.file(os.path.join(r, item), r=True)
+									self.add_log_content_function("[%s] File imported successfully"%item)
+								except:
+									mc.error("Impossible to import file!")
+									return
+		else:
+			print("Import using index!")
 
-		#try to find file in the folder
-		for item in file_selection:
-			for r, d, f in os.walk(folder_name):
-				for file in f:
-					if file == item:
-						self.add_log_content_function("[%s] File found in project" % item)
-						if os.path.isfile(os.path.join(r, item)):
-							try:
-								if command==False:
-									mc.file(os.path.join(r, item), i=True)
-								if command==True:
-									mc.file(os.path.join(r, item), r=True)
-								self.add_log_content_function("[%s] File imported successfully"%item)
-							except:
-								mc.error("Impossible to import file!")
-								return
-								
+				
+
 
 
 	def clean_function(self, event):
@@ -1773,39 +1789,47 @@ class PipelineApplication:
 
 		
         
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==False:
+			#list all the files in defined directory
+			file_list = []
+			total_files = int(sum([len(files) for root, dirs, files in os.walk(starting_folder)]))
+			i=0
+			self.progress_bar = mc.progressWindow(title="Processing...", progress=0, status="Starting", min=0, max=total_files)
 
-		#list all the files in defined directory
-		file_list = []
-		total_files = int(sum([len(files) for root, dirs, files in os.walk(starting_folder)]))
-		i=0
-		self.progress_bar = mc.progressWindow(title="Processing...", progress=0, status="Starting", min=0, max=total_files)
+			print("Searching...")
+			for r,d,f in (os.walk(starting_folder)):
 
-		print("Searching...")
-		for r,d,f in (os.walk(starting_folder)):
+				print("Checking folder [%s]" % r)
+				mc.progressWindow(edit=True, progress=i, status="Processing...")
 
-			print("Checking folder [%s]" % r)
-			mc.progressWindow(edit=True, progress=i, status="Processing...")
+				if ("PipelineManagerData" in d)==True:
+					d.remove("PipelineManagerData")
 
-			if ("PipelineManagerData" in d)==True:
-				d.remove("PipelineManagerData")
+				for file in f:
+					i+=1
+					print("[%s | %s]		checking - %s"%(i,total_files,file))
+					valid=True
 
-			for file in f:
-				i+=1
-				print("[%s | %s]		checking - %s"%(i,total_files,file))
-				valid=True
+					if len(final_extension_list) != 0:
+						if (os.path.splitext(file)[1] in final_extension_list) != True:
+							continue
 
-				if len(final_extension_list) != 0:
-					if (os.path.splitext(file)[1] in final_extension_list) != True:
-						continue
+					for keyword in searchbar_content:
+						if (keyword in file) == False:
+							valid=False 
 
+					if valid == True:
+						file_list.append(file)
+				
+			mc.progressWindow(endProgress=True)
+		else:
+			file_list = []
+			for file, file_data in self.pipeline_index.items():
 				for keyword in searchbar_content:
-					if (keyword in file) == False:
-						valid=False 
+					if keyword in file:
+						file_list.append(file)
+						break
 
-				if valid == True:
-					file_list.append(file)
-			
-		mc.progressWindow(endProgress=True)
                 
      	
         
@@ -1853,28 +1877,42 @@ class PipelineApplication:
 		#check the location of the file in the pipeline
 		pipeline_path = mc.textField(self.project_label, query=True, text=True)
 		#go through all the files
-		for r, d, f in os.walk(pipeline_path):
-			for file in f:
-				if os.path.basename(file) == selection:
-					#open a browser with the location of that file
-					if data == "folder":
-						mc.fileDialog2(ds=1, fm=1, dir=r)
-					else:
-						#open the file
-						try:
-							mc.file(save=True,type="mayaAscii")
-						except:
-							mc.warning("Impossible to save the current scene!")
-							pass
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==False:
+			for r, d, f in os.walk(pipeline_path):
+				for file in f:
+					if os.path.basename(file) == selection:
+						#open a browser with the location of that file
+						if data == "folder":
+							mc.fileDialog2(ds=1, fm=1, dir=r)
+						else:
+							#open the file
+							try:
+								mc.file(save=True,type="mayaAscii")
+							except:
+								mc.warning("Impossible to save the current scene!")
+								pass
 
-						try:
-							print(os.path.join(r, file))
-							print(os.path.isfile(os.path.join(r, file)))	
-							mc.file(os.path.join(r, file), force=True,o=True)
-						except:
-							mc.error("Impossible to open the file!")
-							return
-					break
+							try:
+								print(os.path.join(r, file))
+								print(os.path.isfile(os.path.join(r, file)))	
+								mc.file(os.path.join(r, file), force=True,o=True)
+							except:
+								mc.error("Impossible to open the file!")
+								return
+						break
+		else:
+			#go through the index settings and check each file in it
+			try:
+				path = self.pipeline_index[selection]["path"]
+			except:
+				mc.error("Impossible to find the file in the pipeline index!")
+				return
+			subprocess.Popen("explorer %s"%os.path.normpath(path))
+			
+
+
+
+
 
 
 
@@ -2906,7 +2944,7 @@ class PipelineApplication:
 			return
 		else:
 			print("searching")
-			return
+			
 			#create the list with final filepath
 			#get the path of the pipeline
 			for root, dirs, files in os.walk(mc.textField(self.project_label, query=True, text=True)):

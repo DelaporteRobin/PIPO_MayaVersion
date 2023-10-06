@@ -25,7 +25,7 @@ class PipelineObserverApplication:
 
 
 	def parse_file_function(self, f):
-		
+		#print("Checking file : %s"%f)
 		#print("Checking file %s %s"%(root, f))
 		file_name = None
 		

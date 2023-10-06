@@ -446,7 +446,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.type_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13,parent=self.assets_prod_column, selectCommand=self.display_new_list_function, append=self.type_list_value)
 		self.name_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13, parent=self.assets_prod_column, selectCommand=self.display_new_list_function)
 		self.kind_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13, parent=self.assets_prod_column, selectCommand=self.display_new_list_function, append=self.file_type)
-		self.result_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=10, parent=self.assets_main_rightcolumn, doubleClickCommand=partial(self.open_location_function, "open", "event"), selectCommand=self.search_for_thumbnail_function)
+		self.result_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=10, parent=self.assets_main_rightcolumn, doubleClickCommand=partial(self.open_file_function, "event"), selectCommand=self.search_for_thumbnail_function)
 
 			
 		mc.rowColumnLayout(self.assets_prod_column, edit=True, adjustableColumn=4)
