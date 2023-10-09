@@ -12,8 +12,8 @@
             false
         ],
         "checkboxValuesTextureLinkingPanel": [
-            true,
             false,
+            true,
             true,
             true
         ],
@@ -23,8 +23,8 @@
         "checkboxValuesExportPanel": [
             false,
             false,
-            true,
             false,
+            true,
             false,
             false
         ],

@@ -1019,19 +1019,32 @@ class PipelineApplication:
 					for file in f:
 						if file == item:
 							self.add_log_content_function("[%s] File found in project" % item)
-							if os.path.isfile(os.path.join(r, item)):
+							if os.path.isfile(os.path.join(r, item))==True:
 								try:
 									if command==False:
 										mc.file(os.path.join(r, item), i=True)
 									if command==True:
 										mc.file(os.path.join(r, item), r=True)
-									self.add_log_content_function("[%s] File imported successfully"%item)
+									#self.add_log_content_function("[%s] File imported successfully"%item)
 								except:
 									mc.error("Impossible to import file!")
 									return
 		else:
-			print("Import using index!")
-
+			"""
+			check the name of the file in the pipeline index and get the path
+			then import the file
+			"""
+			for file, file_data in self.pipeline_index.items():
+				if file in file_selection:
+					if os.path.isfile(os.path.join(file_data["path"], file))==True:
+						try:
+							if command==False:
+								mc.file(os.path.join(file_data["path"],file),i=True)
+							else:
+								mc.file(os.path.join(file_data["path"],file),r=True)
+						except:
+							mc.error("Impossible to import file!")
+							return
 				
 
 
