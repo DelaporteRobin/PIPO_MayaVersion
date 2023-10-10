@@ -455,8 +455,11 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		#SEARCHBAR
 		self.searchbar_limit_frame = mc.frameLayout(backgroundColor=self.bright_color, parent=self.assets_main_leftcolumn, label="Research settings", collapsable=True, collapse=True)
 		self.index_checkbox = mc.checkBox(label="Use Index file", value=True, parent=self.searchbar_limit_frame)
+		self.projectcontent_checkbox = mc.checkBox(label="Only display project name", value=True, parent=self.searchbar_limit_frame)
+		mc.separator(style="singleDash", height=5, parent=self.searchbar_limit_frame)
 		self.searchbar_checkbox = mc.checkBox(label="Limit research to project", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "project"))
 		self.folder_checkbox = mc.checkBox(label="Limit research to default\nfolder", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "folder"))
+		mc.separator(style="singleDash", height=5, parent=self.searchbar_limit_frame)
 		self.scenes_checkbox = mc.checkBox(label="Search for 3D Scenes", value=True, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
 		self.items_checkbox = mc.checkBox(label="Search for 3D Items", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
 		self.textures_checkbox = mc.checkBox(label="Search for Textures", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))

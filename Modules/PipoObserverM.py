@@ -50,7 +50,7 @@ class PipelineObserverApplication:
 			if len(splited_filename) != len(splited_syntax):
 				error=True
 				continue
-			#print(f)
+			print(f)
 			#print("	checking with %s"%key)
 
 			if "[type]" in splited_syntax:
@@ -58,7 +58,7 @@ class PipelineObserverApplication:
 		
 				if (splited_filename[index] in self.settings_dictionnary[key])==False:
 		
-					#print("type error")
+					print("type error")
 					error=True
 					continue
 				else:
@@ -68,7 +68,7 @@ class PipelineObserverApplication:
 				index = splited_syntax.index("[key]")
 				#print(splited_filename[index], key)
 				if splited_filename[index] != key:
-					#print("key error")
+					print("key error")
 					error=True
 					continue
 			
@@ -78,7 +78,7 @@ class PipelineObserverApplication:
 
 				project_name = os.path.basename(self.project_path)
 				if splited_filename[index] != project_name:
-					#print("project error")
+					print("project error")
 					error=True
 					continue
 
@@ -88,7 +88,7 @@ class PipelineObserverApplication:
 				if splited_filename[index] != self.additionnal_settings["editPublishFolder"][1]:
 					if (len(splited_filename[index].split("v"))==2):
 						if (splited_filename[index].split("v")[0] != "") or (splited_filename[index].split("v")[1].isdigit()==False):
-							#print("version error")
+							print("version error")
 							error=True
 							continue
 							
@@ -97,7 +97,7 @@ class PipelineObserverApplication:
 					index = splited_syntax.index("[sqversion]")
 					if (len(splited_filename[index].split("sq"))==2):
 						if (splited_filename[index].split("sq")[0] != "") or (splited_filename[index].split("sq")[1].isdigit()==False):
-							#print("sqversion error")
+							print("sqversion error")
 							error=True 
 							continue
 							
@@ -107,7 +107,7 @@ class PipelineObserverApplication:
 				index = splited_syntax.index("[shversion]")
 				if (len(splited_filename[index].split("sh"))==2):
 					if (splited_filename[index].split("sh")[0] != "") or (splited_filename[index].split("sh")[1].isdigit()==False):
-						#print("shversion error")
+						print("shversion error")
 						error=True 
 						continue
 						
@@ -117,7 +117,7 @@ class PipelineObserverApplication:
 
 			if ("[name]" in splited_syntax):
 				name = splited_filename[splited_syntax.index("[name]")]
-				#print("name detected %s"%splited_filename[splited_syntax.index("[name]")])
+				print("name detected %s"%splited_filename[splited_syntax.index("[name]")])
 				file_name = name
 				
 
@@ -125,7 +125,7 @@ class PipelineObserverApplication:
 			if ("[artist]" in splited_syntax):
 				artist = splited_filename[splited_syntax.index("[artist]")]
 				if (self.letter_verification_function(artist) == False) or (self.letter_verification_function(artist)==None):
-					#print("artist error")
+					print("artist error")
 					error=True
 					continue
 

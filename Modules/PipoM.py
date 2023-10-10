@@ -540,6 +540,7 @@ class PipelineApplication:
 			#CREATION OF A THREAD TO CREATE A PARALLEL PROCESSING
 			self.searching_thread = threading.Thread(target=partial(self.search_files_function, type_selection, kind_selection, name_selection))
 			self.searching_thread.start()
+			self.searching_thread.join()
 
 			#LOCAL LAUNCHING OF THE SEARCHING FUNCTION
 			#self.search_files_function(type_selection, kind_selection, name_selection)
@@ -686,16 +687,20 @@ class PipelineApplication:
 					for file in f:
 						value = self.parse_file_function(file)
 						
-						
+						print("CHECKING %s"%file)
 						if value != False:
+
 							filename = value[0]
 							key = value[1]
 							saved_type = value[2]
+
+
 							#split the checked filename and check if the keyword name and type are the right ones
 							splited_filename = file.split("_")
 							splited_syntax = self.settings[key][0].split("_")
-
+							"""
 							validate = False
+
 							for setting_key, setting_value in self.settings.items():
 
 								type = setting_value[1]
@@ -706,6 +711,10 @@ class PipelineApplication:
 										if splited_filename[key_index] == type:
 											validate = True 
 							if validate == False:
+								continue
+							"""
+							print(key in type_selection, key, type_selection)
+							if key not in type_selection:
 								continue
 
 							if name_selection != None:
@@ -724,14 +733,39 @@ class PipelineApplication:
 							
 							
 							
-							print("no error detected for %s"%filename)
+							#print("no error detected for %s"%filename)
 							
 							if file not in final_file_list:
 								final_file_list.append(file)
-							if filename not in final_name_list:
-								final_name_list.append(filename)
-							#final_file_list.append(file)
-							#final_name_list.append(filename)
+
+							if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
+								if filename not in final_name_list:
+									final_name_list.append(filename)
+							else:
+							
+								default_folder = self.settings[key][2]
+								splited_default_folder = default_folder.split("/")
+								splited_file_path = r.replace("\\", "/").split("/")
+								
+								
+								if "[name]" not in splited_default_folder:
+									mc.error("Impossible to get name in the filepath!")
+									return 
+								else:
+									#print("INFORMATIONS")
+									#name_index = splited_default_folder.index("[name]")
+									splited_file_path = splited_file_path[splited_file_path.index(project_name):]
+									#print(splited_file_path)
+									#print(splited_default_folder)
+									file_project_name_index = len(splited_default_folder) - splited_default_folder.index("[name]")
+									
+									
+									if len(splited_file_path)== len(splited_default_folder):
+										if splited_file_path[-file_project_name_index] not in final_name_list:
+
+											#print("INFORMATIONS ABOUT THE SCENE")
+											
+											final_name_list.append(splited_file_path[-file_project_name_index])
 							
 							
 
@@ -743,7 +777,7 @@ class PipelineApplication:
 				"""
 				file_pipeline_index = list(self.pipeline_index.keys())
 				for file in file_pipeline_index:
-					value = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection)
+					value, value_key = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection)
 
 					#print(value, file)
 					
@@ -775,9 +809,41 @@ class PipelineApplication:
 							#print("file matching [%s]"%file)
 							if file not in final_file_list:
 								final_file_list.append(file)
-							if value not in final_name_list:
-								final_name_list.append(value)
-				
+
+							if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
+								if value not in final_name_list:
+									final_name_list.append(value)
+							else:
+								"""
+								print(file_path)
+								print(file)
+								print(value_key)
+								"""
+
+								#get the default folder for the path
+								default_folder = self.settings[value_key][2]
+								splited_default_folder = default_folder.split("/")
+								splited_file_path = file_path.split("/")
+								
+								if "[name]" not in splited_default_folder:
+									mc.error("Impossible to get name in the filepath!")
+									return 
+								else:
+									print("INFORMATIONS")
+									#name_index = splited_default_folder.index("[name]")
+									splited_file_path = splited_file_path[splited_file_path.index(project_name):]
+									print(splited_file_path)
+									print(splited_default_folder)
+									file_project_name_index = len(splited_default_folder) - splited_default_folder.index("[name]")
+									
+									
+									if len(splited_file_path)== len(splited_default_folder):
+										if splited_file_path[-file_project_name_index] not in final_name_list:
+
+											#print("INFORMATIONS ABOUT THE SCENE")
+											
+											final_name_list.append(splited_file_path[-file_project_name_index])
+
 
 					
 				
@@ -823,6 +889,7 @@ class PipelineApplication:
 		error=False
 		final_name = None
 		splited_file = file.split("_")
+		current_type = None
 		
 		if type_selection != None:
 			for type in type_selection:
@@ -836,13 +903,12 @@ class PipelineApplication:
 				except:
 					mc.error("No key in the syntax!")
 					return
-				#print(splited_file[type_index], type)
+				
 
-				#print(self.settings[type][1], splited_file[type_index])
-				#print(self.settings[type][1])
 				if splited_file[type_index] != self.settings[type][1]:
 					error=True 
 				else:
+					current_type = splited_file[type_index]
 					#detect the filename of the current file
 					if '[name]' in splited_type_syntax:
 						final_name = splited_file[splited_type_syntax.index('[name]')]
@@ -882,9 +948,10 @@ class PipelineApplication:
 
 
 		if error==True:
-			return False 
+			return False, False
 		else:
-			return final_name
+			
+			return final_name, current_type
 
 
 

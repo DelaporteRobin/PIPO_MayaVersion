@@ -2,7 +2,7 @@
     "dict1": {
         "checkboxValuesMainPage": [
             false,
-            true,
+            false,
             true,
             false,
             false
@@ -28,7 +28,9 @@
             false,
             false
         ],
-        "FavoriteFiles": {},
+        "FavoriteFiles": {
+            "prop_pizzaBox_lookdev_v002.ma": "//storage/esma/3D4/trash/04_asset/testAssets/pizzaBox/maya/scenes/edit/lookdev/prop_pizzaBox_lookdev_v002.ma"
+        },
         "ExportRaimbow": true,
         "ExportWebsite": true
     }
