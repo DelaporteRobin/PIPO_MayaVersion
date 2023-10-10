@@ -687,7 +687,7 @@ class PipelineApplication:
 					for file in f:
 						value = self.parse_file_function(file)
 						
-						print("CHECKING %s"%file)
+						#print("CHECKING %s"%file)
 						if value != False:
 
 							filename = value[0]
@@ -713,7 +713,7 @@ class PipelineApplication:
 							if validate == False:
 								continue
 							"""
-							print(key in type_selection, key, type_selection)
+							#print(key in type_selection, key, type_selection)
 							if key not in type_selection:
 								continue
 
@@ -752,20 +752,20 @@ class PipelineApplication:
 									mc.error("Impossible to get name in the filepath!")
 									return 
 								else:
-									#print("INFORMATIONS")
-									#name_index = splited_default_folder.index("[name]")
+									"""
+									if the name selection isn't empty add all the files contained in the right maya project
+									"""
 									splited_file_path = splited_file_path[splited_file_path.index(project_name):]
-									#print(splited_file_path)
-									#print(splited_default_folder)
+
 									file_project_name_index = len(splited_default_folder) - splited_default_folder.index("[name]")
 									
 									
 									if len(splited_file_path)== len(splited_default_folder):
 										if splited_file_path[-file_project_name_index] not in final_name_list:
-
-											#print("INFORMATIONS ABOUT THE SCENE")
 											
 											final_name_list.append(splited_file_path[-file_project_name_index])
+
+
 							
 							
 
@@ -807,10 +807,11 @@ class PipelineApplication:
 
 						if display == True:	
 							#print("file matching [%s]"%file)
-							if file not in final_file_list:
-								final_file_list.append(file)
+							print("checking for the file %s"%file)
 
 							if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
+								if file not in final_file_list:
+									final_file_list.append(file)
 								if value not in final_name_list:
 									final_name_list.append(value)
 							else:
@@ -829,20 +830,35 @@ class PipelineApplication:
 									mc.error("Impossible to get name in the filepath!")
 									return 
 								else:
-									print("INFORMATIONS")
+									#print("INFORMATIONS")
 									#name_index = splited_default_folder.index("[name]")
 									splited_file_path = splited_file_path[splited_file_path.index(project_name):]
-									print(splited_file_path)
-									print(splited_default_folder)
+									#print(splited_file_path)
+									#print(splited_default_folder)
 									file_project_name_index = len(splited_default_folder) - splited_default_folder.index("[name]")
+
 									
+									if name_selection == None:
+										final_file_list.append(file)
+
+									
+
+										
 									
 									if len(splited_file_path)== len(splited_default_folder):
 										if splited_file_path[-file_project_name_index] not in final_name_list:
 
-											#print("INFORMATIONS ABOUT THE SCENE")
-											
-											final_name_list.append(splited_file_path[-file_project_name_index])
+											if name_selection == None:
+												final_name_list.append(splited_file_path[-file_project_name_index])
+											else:
+												print("checking for ")
+												print(file)
+												print(splited_file_path)
+												print(name_selection)
+												print(splited_file_path[-file_project_name_index])
+
+												if splited_file_path[-file_project_name_index] in name_selection:
+													final_file_list.append(file)
 
 
 					
@@ -927,18 +943,18 @@ class PipelineApplication:
 					if splited_file[kind_index] != kind:
 						error=True
 
+			if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
+				if name_selection != None:
+					for name in name_selection:
+						try:
+							name_index = splited_type_syntax.index("[name]")
+						except:
+							mc.error("No name in the syntax!")
+							return
 
-			if name_selection != None:
-				for name in name_selection:
-					try:
-						name_index = splited_type_syntax.index("[name]")
-					except:
-						mc.error("No name in the syntax!")
-						return
-
-					if len(splited_file) == len(splited_type_syntax):
-						if splited_file[name_index] != name:
-							error=True
+						if len(splited_file) == len(splited_type_syntax):
+							if splited_file[name_index] != name:
+								error=True
 
 
 
