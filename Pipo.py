@@ -442,7 +442,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		
 		
 		self.note_textfield = mc.scrollField(parent=self.note_column, height=40, wordWrap=True, font="plainLabelFont", enterCommand=self.save_note_function)
-		self.assets_prod_column = mc.rowColumnLayout(numberOfColumns=4, parent=self.assets_main_rightcolumn, columnWidth=((1, self.window_width/6), (2, self.window_width/6), (3, self.window_width/6)))
+		self.assets_prod_column = mc.rowColumnLayout(numberOfColumns=4, parent=self.assets_main_rightcolumn, columnWidth=((1, self.window_width*2/9), (2, self.window_width*2/9), (3, self.window_width*2/9)))
 		self.type_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13,parent=self.assets_prod_column, selectCommand=self.display_new_list_function, append=self.type_list_value)
 		self.name_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13, parent=self.assets_prod_column, selectCommand=self.display_new_list_function)
 		self.kind_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13, parent=self.assets_prod_column, selectCommand=self.display_new_list_function, append=self.file_type)
@@ -846,7 +846,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.tabLayout(self.tabs, edit=True, tabLabel=((self.prod_column, "PROD ASSETS"), (self.export_column, "EXPORT"), (self.render_column, "RENDER"), (self.archive_column, "ARCHIVE")))
 		#self.dock_control = mc.dockControl(label="Pipo - Written by Quazar", enablePopupOption=True, floating=True, area="left", content=self.main_window, allowedArea=["right", "left"])
 
-
+		self.get_current_scene_name_function()
 		self.apply_user_settings_function()
 
 

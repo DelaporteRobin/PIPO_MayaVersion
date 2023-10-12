@@ -188,8 +188,6 @@ class PipelineObserverApplication:
 							"path":(r""+root).replace("\\", "/").replace(os.sep, "/"),
 							"fullpath": (r""+os.path.join(root, f)).replace("\\", "/").replace(os.sep, "/"),
 							"filename":filename,
-							"filesize": os.path.getsize(os.path.join(root, f)),
-							"filedate": (datetime.fromtimestamp(os.path.getmtime(os.path.join(root, f)))).strftime("%Y-%m-%d")
 							}
 			self.save_pipeline_index_function()	
 
@@ -246,8 +244,6 @@ class MyHandler(FileSystemEventHandler):
 					"path":(os.path.dirname(event.src_path)).replace(os.sep, "/"),
 					"fullpath":(event.src_path).replace(os.sep, "/"),
 					"filename":os.path.splitext(os.path.dirname(event.src_path))[0],
-					"filesize":os.path.getsize(event.src_path),
-					"filedate":(datetime.fromtimestamp(os.path.getmtime(event.src_path))).strftime("%Y-%m-%d")
 				}
 				value = self.pipo.parse_file_function(os.path.basename(event.src_path))
 
@@ -266,8 +262,6 @@ class MyHandler(FileSystemEventHandler):
 				"path":(os.path.dirname(event.src_path)).replace(os.sep, "/"),
 				"fullpath":(event.src_path).replace(os.sep, "/"),
 				"filename":os.path.splitext(os.path.dirname(event.src_path))[0],
-				"filesize":os.path.getsize(event.src_path),
-				"filedate":(datetime.fromtimestamp(os.path.getmtime(event.src_path))).strftime("%Y-%m-%d")
 			}
 			#print("Created\n")
 			#print(filepath)
@@ -323,8 +317,6 @@ class MyHandler(FileSystemEventHandler):
 					"path":(os.path.dirname(event.dest_path)).replace(os.sep, "/"),
 					"fullpath":(event.dest_path).replace(os.sep, "/"),
 					"filename":os.path.splitext(os.path.dirname(event.dest_path))[0],
-					"filesize":os.path.getsize(event.dest_path),
-					"filedate":(datetime.fromtimestamp(os.path.getmtime(event.dest_path))).strftime("%Y-%m-%d")
 				}
 				self.pipo.pipeline_index[os.path.basename(event.dest_path)] = file_data
 				

@@ -851,11 +851,13 @@ class PipelineApplication:
 											if name_selection == None:
 												final_name_list.append(splited_file_path[-file_project_name_index])
 											else:
+												"""
 												print("checking for ")
 												print(file)
 												print(splited_file_path)
 												print(name_selection)
 												print(splited_file_path[-file_project_name_index])
+												"""
 
 												if splited_file_path[-file_project_name_index] in name_selection:
 													final_file_list.append(file)
@@ -2029,6 +2031,7 @@ class PipelineApplication:
 		#get project keyword
 		project_name = self.additionnal_settings["mayaProjectName"]
 
+		"""
 		if favorite_selection != None:
 			#get the path of the file
 			index = False
@@ -2048,23 +2051,20 @@ class PipelineApplication:
 				splited_filepath.append(project_name)
 				filepath = "/".join(splited_filepath)
 				try:
-					mc.workspace(filepath, openWorkspace=True, n=True)
+					mc.workspace(filepath, n=True)
 				except:
+					mc.warning("Impossible to create maya default folder!")
 					try:
-						mc.workspace(filepath, openWorkspace=True)
+						mc.workspace(filepath, o=True)
 					except:
 						mc.error("Impossible to set the project!")
 						return 
 				os.chdir(filepath)
 				mc.warning("Project path set to : %s"%filepath)
-			return
+			return"""
 
-		"""
-		if index mode is selected
-			go through the files in the index
-			get the path
-			find the maya project keyword inside
-		"""
+		
+		print("TRYING TO SET THE PROJECT FDP!")
 		index_checkbox = mc.checkBox(self.index_checkbox, query=True, value=True)
 		if index_checkbox == True :
 			for file, data in self.pipeline_index.items():
@@ -2078,21 +2078,21 @@ class PipelineApplication:
 						mc.error("Impossible to find maya project keyword in path!")
 						return 
 					else:
+						
+						maya_project_index = splited_path.index(project_name)
+						project_path = "/".join(splited_path[:maya_project_index+1])
+						print("Project path [%s]"%project_path)
 						try:
-							maya_project_index = splited_path.index(project_name)
-							project_path = "/".join(splited_path[:maya_project_index+1])
-							try:
-								mc.workspace(project_path, openWorkspace=True, n=True)
-							except:
-								try:
-									mc.workspace(project_path, openWorkspace=True)
-								except:
-									mc.error("Impossible to set the project!")
-									return
-								print("Project path set to : %s"%project_path)
+
+							#print("set project to %s"%project_path)
+							mc.workspace(project_path, n=True)
+							print("Project created!")
 						except:
-							mc.error("Impossible to set project!")
-							return
+							try:
+								mc.workspace(project_path, o=True)
+								print("Project opened!")
+							except:
+								mc.warning("Impossible to set the project!")
 		else:
 			for r, d, f in os.walk(pipeline_path):
 				for file in f:
@@ -2109,15 +2109,16 @@ class PipelineApplication:
 							#print(os.getcwd(), os.path.basename(path), project_name)
 							if os.path.basename(path) == project_name:
 								#set project here!!!
+								print("Project path [%s]"%path)
 								try:
-									mc.workspace(path, openWorkspace=True, n=True)
+									mc.workspace(path, n=True)
+									print("Project created!")
 								except:
 									try:
-										mc.workspace(path, openWorkspace=True)
+										mc.workspace(path, o=True)
+										print("Project opened!")
 									except:
-										mc.error("Impossible to set the project!")
-										return
-								mc.warning("Project path set to : %s"%path)
+										mc.warning("Impossible to set the project!")
 								defined=True
 								
 
@@ -2128,6 +2129,21 @@ class PipelineApplication:
 						if defined==False:
 							mc.error("Impossible to find a project folder for that file!")
 							return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	def open_file_function(self, event):
@@ -2423,7 +2439,7 @@ class PipelineApplication:
 		kind_selection = mc.textScrollList(self.export_kind_textscrolllist, query=True, si=True)
 		splited_filename = os.path.splitext(os.path.basename(mc.file(query=True, sn=True)))[0].split("_")
 
-		if (mc.checkBox(self.export_projectassist_folder_checkbox)==False):
+		if (mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True)==False):
 			if type_selection == None:
 				mc.error("You have to select a type!")
 				return
@@ -3378,6 +3394,14 @@ class PipelineApplication:
 		self.save_settings_file()
 		self.apply_user_settings_function()
 
+
+
+
+	def get_current_scene_name_function(self):
+		"""
+		check if the name of the scene exists
+		"""
+		print("get name of the scene")
 
 
 

@@ -12,8 +12,8 @@
             false
         ],
         "checkboxValuesTextureLinkingPanel": [
-            false,
             true,
+            false,
             true,
             true
         ],
@@ -23,14 +23,12 @@
         "checkboxValuesExportPanel": [
             false,
             false,
-            false,
             true,
+            false,
             false,
             false
         ],
-        "FavoriteFiles": {
-            "prop_pizzaBox_lookdev_v002.ma": "//storage/esma/3D4/trash/04_asset/testAssets/pizzaBox/maya/scenes/edit/lookdev/prop_pizzaBox_lookdev_v002.ma"
-        },
+        "FavoriteFiles": {},
         "ExportRaimbow": true,
         "ExportWebsite": true
     }
