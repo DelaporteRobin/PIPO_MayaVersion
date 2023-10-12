@@ -3399,9 +3399,23 @@ class PipelineApplication:
 
 	def get_current_scene_name_function(self):
 		"""
-		check if the name of the scene exists
+		get the current path of the scene
+		get the current filename
+		parse the filename thanks to syntax settings
+
+		get the item name from the filename
 		"""
-		print("get name of the scene")
+		current_filepath = mc.file(sceneName=True, query=True)
+		if os.path.isdir(current_filepath) != True:
+			mc.warning("Impossible to get the current name!")
+			return
+		path = os.path.dirname(current_filepath)
+		filename = os.path.basename(current_filepath)
+		filename, extension = os.path.splitext(filename)
+
+		#go through the settings
+		value = self.parse_file_function(filename)
+		print(value)
 
 
 
