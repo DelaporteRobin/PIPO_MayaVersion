@@ -355,82 +355,89 @@ class PipelineRenderApplication:
 			mode = "automatic"
 		#get channel and file selection
 		channel_selection = mc.textScrollList(self.render_texture_list_channel, query=True, si=True)
-		if mode == "manual":
-			file_selection = mc.textScrollList(self.render_texture_list_result, query=True, si=True)
 
-		if mode == "automatic":
-			name_selection = mc.textScrollList(self.render_texture_list_names, query=True, si=True)
-			#from the name selection get one file for each channel selected!
-			if name_selection == None:
-				mc.error("You have to select a name!")
-				return 
+
+		#if mode == "manual":
+		#	file_selection = mc.textScrollList(self.render_texture_list_result, query=True, si=True)
+
+
+
+		#if mode == "automatic":
+		name_selection = mc.textScrollList(self.render_texture_list_names, query=True, si=True)
+		#from the name selection get one file for each channel selected!
+		if name_selection == None:
+			mc.error("You have to select a name!")
+			return 
+		else:
+			#go in the texture folder to check the name of the textures
+			#define the starting folder
+			if mc.checkBox(self.render_texture_limit_project, query=True, value=True)==True:
+				starting_folder = mc.workspace(query=True, active=True)
 			else:
-				#go in the texture folder to check the name of the textures
-				#define the starting folder
-				if mc.checkBox(self.render_texture_limit_project, query=True, value=True)==True:
-					starting_folder = mc.workspace(query=True, active=True)
-				else:
-					starting_folder = mc.textField(self.project_label, query=True, text=True)
-				if (starting_folder==None) or (os.path.isdir(starting_folder)==False):
-					mc.error("Impossible to find the textures!\nDefine a project first!")
-					return
-				texture_folder = False
+				starting_folder = mc.textField(self.project_label, query=True, text=True)
+			if (starting_folder==None) or (os.path.isdir(starting_folder)==False):
+				mc.error("Impossible to find the textures!\nDefine a project first!")
+				return
+			texture_folder = False
 
-				for root, dir, files in os.walk(starting_folder):
-					for d in dir:
-						
-						if d == self.additionnal_settings["textureFolderInProject"]:
-							texture_folder = os.path.join(root, d)
-							break
-					if texture_folder != False:
-						break
-				
-
-				if texture_folder == False:
-					mc.error("Impossible to find the texture folder!")
-					return 
-				if os.path.isdir(os.path.join(texture_folder, name_selection[0]))==False:
-					mc.error("This texture folder doesn't exist anymore!")
-					return
-				texture_folder = os.path.join(texture_folder, name_selection[0])
-				texture_extension = self.additionnal_settings["texturesExtension"]
-
-				if (texture_extension == None) or (len(texture_extension)==0):
-					mc.error("Impossible to get textures extension!\nChange your settings!")
-					return
-
-				
-				#find textures in the texture folder with right extensions
-				textures_in_folder = []
-				for extension in texture_extension:
-					result = glob.glob(os.path.join(texture_folder, "*%s"%extension))
-					if (result != None) and (len(result) != 0):
-						textures_in_folder = textures_in_folder + result
-
-
-				
-
-				#for each channel define one texture!
-				file_selection = {}
-				texture_settings = self.texture_settings[self.additionnal_settings["renderEngine"]]
-
-				for channel in channel_selection:
+			for root, dir, files in os.walk(starting_folder):
+				for d in dir:
 					
-					#get keywords for this channel
-					keyword_list = texture_settings[channel][0]
+					if d == self.additionnal_settings["textureFolderInProject"]:
+						texture_folder = os.path.join(root, d)
+						break
+				if texture_folder != False:
+					break
+			
 
-					for file in textures_in_folder:
-						found=False
-						for keyword in keyword_list:
-							#print(os.path.splitext(os.path.basename(file)[0]), keyword in os.path.splitext(os.path.basename(file))[0])
-							if keyword in os.path.splitext(os.path.basename(file))[0]:
-								file_selection[channel] = file 
+			if texture_folder == False:
+				mc.error("Impossible to find the texture folder!")
+				return 
+			if os.path.isdir(os.path.join(texture_folder, name_selection[0]))==False:
+				mc.error("This texture folder doesn't exist anymore!")
+				return
+			texture_folder = os.path.join(texture_folder, name_selection[0])
+			texture_extension = self.additionnal_settings["texturesExtension"]
 
-								print("[%s] : %s"%(channel, file))
-								found=True
-								break
-						if found == True:
+			if (texture_extension == None) or (len(texture_extension)==0):
+				mc.error("Impossible to get textures extension!\nChange your settings!")
+				return
+
+			
+			#find textures in the texture folder with right extensions
+			textures_in_folder = []
+			for extension in texture_extension:
+				result = glob.glob(os.path.join(texture_folder, "*%s"%extension))
+				if (result != None) and (len(result) != 0):
+					textures_in_folder = textures_in_folder + result
+
+
+			
+
+			#for each channel define one texture!
+			file_selection = {}
+			origin_file_selection = {}
+			texture_settings = self.texture_settings[self.additionnal_settings["renderEngine"]]
+
+			for channel in channel_selection:
+				
+				#get keywords for this channel
+				keyword_list = texture_settings[channel][0]
+
+				for file in textures_in_folder:
+					found=False
+					for keyword in keyword_list:
+						#print(os.path.splitext(os.path.basename(file)[0]), keyword in os.path.splitext(os.path.basename(file))[0])
+						if keyword in os.path.splitext(os.path.basename(file))[0]:
+							file_selection[channel] = file 
+							origin_file_selection[channel] = file
+
+							print("[%s] : %s"%(channel, file))
+							found=True
 							break
+					if found == True:
+						break
+
 
 				
 				
@@ -451,15 +458,17 @@ class PipelineRenderApplication:
 				channel_selection = list(file_selection.keys())
 				file_selection = list(file_selection.values())
 
+				origin_file_selection = list(origin_file_selection.values())
+
 		
 			for i in range(0, len(file_selection)):
 				file_selection[i] = (r""+file_selection[i]).replace("\\", "/")
 
 
 
-		
+			udim=False
 			if mc.checkBox(self.render_texture_udim_checking, query=True, value=True)==True:
-
+				#origin_filename_list = file_selection
 				for y in range(0, len(file_selection)):
 					udim = False
 					#for each file try to get udims in filename and replace them
@@ -479,6 +488,7 @@ class PipelineRenderApplication:
 								print("UDIM POTENTIALLY DETECTED!")
 								#change the filename and replace the udim index by the undim code
 								splited_filename_dots[i] = "<UDIM>"
+								udim = True
 
 								file_selection[y] = ".".join(splited_filename_dots) + extension
 								print(file_selection[y])
@@ -491,19 +501,27 @@ class PipelineRenderApplication:
 						if (u_value.split("u")[0] == "") and (u_value[1].isdigit()==True) and (v_value.split("v")[0] == "") and (v_value[1].isdigit()==True):
 							splited_filename_underscore[-2] = "u<u>"
 							splited_filename_underscore[-1] = "v<v>"
+							#origin_filename = file_selection[y]
 							file_selection[y] = "_".join(splited_filename_underscore) + extension
 							print("UDIM POTENTIALLY DETECTED")
 							print(file_selection[y])
-			
+							udim = True
+
+					if udim == True:
+						break
+		
 			
 
 				
-
-
+			#print(file_selection)
+			#print(origin_file_selection)
+			print("\n")
 				
 			for i in range(0, len(channel_selection)):
 				channel = channel_selection[i]
 				file = file_selection[i]
+				origin_file = origin_file_selection[i]
+
 
 				print(channel, file)
 				
@@ -534,20 +552,38 @@ class PipelineRenderApplication:
 							#set the attribute of that node
 							exec("mc.setAttr('%s.%s', %s)"%(old_node, attribute_to_change[1], attribute_to_change[2]))
 
+				
+		
 				if udim==False:
+					
+				
+					
 					#print(old_node, texture_attribute_, self.texture_list[file])
 					try:
 						exec("mc.setAttr('%s.%s', '%s', type='string')"%(old_node,texture_attribute,self.texture_list[file]))
 					except KeyError:
 						exec("mc.setAttr('%s.%s', '%s', type='string')"%(old_node, texture_attribute, file))
 				else:
+				
+					
+
 					#get the extension of the file in the dictionnary and add it after the new file name
-					extension = os.path.splitext(self.texture_list[file])[1]
-					path = os.path.dirname(self.texture_list[file])
-					updated_texture_path = (os.path.join(path, new_file)+extension).replace(os.sep, "/")
+					
+					try:
+						extension = os.path.splitext(self.texture_list[file])[1]
+						path = os.path.dirname(self.texture_list[file])
+					except:
+						extension = os.path.splitext(self.texture_list[os.path.basename(origin_file)])[1]
+						path = os.path.dirname(self.texture_list[os.path.basename(origin_file)])
+					updated_texture_path = (os.path.join(path, file)).replace(os.sep, "/")
+
+					print(path)
+					print(updated_texture_path)
+					
 
 					exec("mc.setAttr('%s.%s', '%s', type='string')"%(old_node,texture_attribute,updated_texture_path))
-					
+				
+				
 					
 				
 
