@@ -119,6 +119,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		print("Pipo Launching...")
 		self.current_name = None
 		self.current_type = None
+		self.current_seq = None 
+		self.current_shot = None
 
 
 
@@ -178,7 +180,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		#check if the module list file exist
 		#self.project_path = mc.workspace(query=True, rd=True)
 		self.project_path = None
-		self.window_width = 450
+		self.window_width = 550
 		self.window_height=450
 
 		letter = 'abcdefghijklmnopqrstuvwxyz'
@@ -444,7 +446,16 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.note_textfield = mc.scrollField(parent=self.note_column, height=40, wordWrap=True, font="plainLabelFont", enterCommand=self.save_note_function)
 		self.assets_prod_column = mc.rowColumnLayout(numberOfColumns=4, parent=self.assets_main_rightcolumn, columnWidth=((1, self.window_width*2/9), (2, self.window_width*2/9), (3, self.window_width*2/9)))
 		self.type_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13,parent=self.assets_prod_column, selectCommand=self.display_new_list_function, append=self.type_list_value)
-		self.name_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13, parent=self.assets_prod_column, selectCommand=self.display_new_list_function)
+
+		self.assets_center_column = mc.columnLayout(adjustableColumn=True, parent=self.assets_prod_column)
+		self.assets_center_frame_name = mc.frameLayout(parent=self.assets_center_column, label="Name list", collapsable=True, collapse=False)
+
+		self.name_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=20, height=180, parent=self.assets_center_frame_name, selectCommand=self.display_new_list_function)
+		self.assets_center_frame_seq = mc.frameLayout(parent=self.assets_center_column, label="Shot manager", collapsable=True, collapse=True)
+		self.assets_center_frame_row = mc.rowColumnLayout(numberOfColumns=2, parent=self.assets_center_frame_seq, columnWidth=((1, self.window_width*1/9), (2, self.window_width*1/9)))
+		self.seq_list = mc.textScrollList(numberOfRows=15, parent=self.assets_center_frame_row, selectCommand=self.display_new_list_function)
+		self.shot_list = mc.textScrollList(numberOfRows=15, parent=self.assets_center_frame_row, selectCommand=self.display_new_list_function)
+		
 		self.kind_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=13, parent=self.assets_prod_column, selectCommand=self.display_new_list_function, append=self.file_type)
 		self.result_list=mc.textScrollList(allowMultiSelection=True, numberOfRows=10, parent=self.assets_main_rightcolumn, doubleClickCommand=partial(self.open_file_function, "event"), selectCommand=self.search_for_thumbnail_function)
 
@@ -776,6 +787,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.separator(style="none", height=15, parent=self.export_leftcolumn)
 		self.template_textscrolllist = mc.textScrollList(numberOfRows=5, parent=self.export_leftcolumn)
 		self.export_edit_name_checkbox = mc.checkBox(label="Keep same name", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=True, parent=self.export_leftcolumn)
+		mc.button(label="Get current name", parent=self.export_leftcolumn, command=self.get_current_scene_name_function)
 		mc.separator(style="singleDash", height=2, parent=self.export_leftcolumn)
 		mc.text(label="Item Name", align="left", parent=self.export_leftcolumn)
 		self.export_edit_name_textfield = mc.textField(parent=self.export_leftcolumn)
@@ -846,7 +858,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.tabLayout(self.tabs, edit=True, tabLabel=((self.prod_column, "PROD ASSETS"), (self.export_column, "EXPORT"), (self.render_column, "RENDER"), (self.archive_column, "ARCHIVE")))
 		#self.dock_control = mc.dockControl(label="Pipo - Written by Quazar", enablePopupOption=True, floating=True, area="left", content=self.main_window, allowedArea=["right", "left"])
 
-		self.get_current_scene_name_function()
+		self.get_current_scene_name_function("content")
 		self.apply_user_settings_function()
 
 

@@ -505,16 +505,13 @@ class PipelineApplication:
 		type_selection = mc.textScrollList(self.type_list, query=True, si=True)
 		kind_selection = mc.textScrollList(self.kind_list, query=True, si=True)
 		name_selection = mc.textScrollList(self.name_list, query=True, si=True)
+		seq_selection = mc.textScrollList(self.seq_list, query=True, si=True)
+		shot_selection = mc.textScrollList(self.shot_list, query=True, si=True)
 
 
 		if name_selection != None:
 			if self.current_name != name_selection[0]:
 				self.current_name = name_selection[0]
-		"""
-		if type_selection != None:
-			if self.current_type != type_selection[0]:
-				self.current_type = type_selection[0]
-		"""
 
 		
 		
@@ -530,6 +527,10 @@ class PipelineApplication:
 						for item in value:
 							if (item in self.new_type_list)==False:
 								self.new_type_list.append(item)
+
+								
+
+
 			if (past_type_list != self.new_type_list):
 				mc.textScrollList(self.kind_list, edit=True, removeAll=True, append=self.new_type_list)
 
@@ -538,7 +539,7 @@ class PipelineApplication:
 		if (type_selection != None) or (kind_selection != None) or (name_selection != None):
 
 			#CREATION OF A THREAD TO CREATE A PARALLEL PROCESSING
-			self.searching_thread = threading.Thread(target=partial(self.search_files_function, type_selection, kind_selection, name_selection))
+			self.searching_thread = threading.Thread(target=partial(self.search_files_function, type_selection, kind_selection, name_selection, seq_selection, shot_selection))
 			self.searching_thread.start()
 			self.searching_thread.join()
 
@@ -550,7 +551,7 @@ class PipelineApplication:
 
 
 
-	def search_files_function(self, type_selection, kind_selection, name_selection):
+	def search_files_function(self, type_selection, kind_selection, name_selection, seq_selection, shot_selection):
 		#get the content of all checkbox
 		#to define the searching field
 		index_checkbox_value = mc.checkBox(self.index_checkbox, query=True, value=True)
@@ -672,6 +673,8 @@ class PipelineApplication:
 		
 		final_file_list = []
 		final_name_list = []
+		final_seq_list = []
+		final_shot_list = []
 		
 		for folder in starting_folder:
 			print("searching in [%s]"%folder)
@@ -698,21 +701,7 @@ class PipelineApplication:
 							#split the checked filename and check if the keyword name and type are the right ones
 							splited_filename = file.split("_")
 							splited_syntax = self.settings[key][0].split("_")
-							"""
-							validate = False
-
-							for setting_key, setting_value in self.settings.items():
-
-								type = setting_value[1]
-								if type_selection != None:
-									if "[key]" in splited_syntax:
-										key_index = splited_syntax.index("[key]")
-										
-										if splited_filename[key_index] == type:
-											validate = True 
-							if validate == False:
-								continue
-							"""
+							
 							#print(key in type_selection, key, type_selection)
 							if key not in type_selection:
 								continue
@@ -731,6 +720,16 @@ class PipelineApplication:
 										#print("type error %s %s"%(splited_filename[kind_index], kind_selection))
 										continue
 							
+							if seq_selection != None:
+								if "[sqversion" in splited_syntax:
+									seq_index = splited_syntax.index("[sqversion]")
+									if splited_filename[seq_index] not in seq_selection:
+										continue
+							if shot_selection != None:
+								if "[shversion]" in splited_syntax:
+									shot_index = splited_syntax.index("[shversion]")
+									if splited_filename[shot_index] not in shot_selection:
+										continue
 							
 							
 							#print("no error detected for %s"%filename)
@@ -749,8 +748,8 @@ class PipelineApplication:
 								
 								
 								if "[name]" not in splited_default_folder:
-									mc.error("Impossible to get name in the filepath!")
-									return 
+									print("Impossible to get the name in the default folder path!")
+									 
 								else:
 									"""
 									if the name selection isn't empty add all the files contained in the right maya project
@@ -777,13 +776,18 @@ class PipelineApplication:
 				"""
 				file_pipeline_index = list(self.pipeline_index.keys())
 				for file in file_pipeline_index:
-					value, value_key = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection)
+					value, value_key, sqversion, shversion = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection, seq_selection, shot_selection)
 
-					#print(value, file)
+					#print(file, value, value_key, sqversion, shversion)
 					
 					if value != False:
+						if (sqversion != False) and (sqversion != None):
+							if sqversion not in final_seq_list:
+								final_seq_list.append(sqversion)
 						#check if the path of the file is in the starting path
 						file_path = self.pipeline_index[file]["path"]
+
+						
 						
 						display = True
 						#check if the project folder is checked
@@ -815,20 +819,29 @@ class PipelineApplication:
 								if value not in final_name_list:
 									final_name_list.append(value)
 							else:
-								"""
-								print(file_path)
-								print(file)
-								print(value_key)
-								"""
-
+							
 								#get the default folder for the path
-								default_folder = self.settings[value_key][2]
+								try:
+									default_folder = self.settings[value_key][2]
+								except:
+									print("Impossible to find default folder for %s"%file)
+									continue
 								splited_default_folder = default_folder.split("/")
 								splited_file_path = file_path.split("/")
+								"""
+								if (sqversion != False) and (sqversion != None):
+									if sqversion not in final_seq_list:
+										final_seq_list.append(sqversion)
+										final_file_list.append(file)
+								"""
+								if (shversion != False) and (shversion != None):
+									if shversion not in final_shot_list:
+										final_shot_list.append(shversion)
+										final_file_list.append(file)
 								
 								if "[name]" not in splited_default_folder:
-									mc.error("Impossible to get name in the filepath!")
-									return 
+									print("Impossible to get the name in the filepath!\n")
+
 								else:
 									#print("INFORMATIONS")
 									#name_index = splited_default_folder.index("[name]")
@@ -840,6 +853,9 @@ class PipelineApplication:
 									
 									if name_selection == None:
 										final_file_list.append(file)
+
+
+									
 
 									
 
@@ -867,13 +883,17 @@ class PipelineApplication:
 				
 					
 
-		print(final_name_list)
+
 		
 		print("\nSEARCHING DONE!!!\n")
 		mc.progressWindow(endProgress=True)
 
 		
 		mc.textScrollList(self.result_list, edit=True,removeAll=True, append=final_file_list)
+
+		mc.textScrollList(self.seq_list, edit=True, removeAll=True, append=final_seq_list)
+		mc.textScrollList(self.shot_list, edit=True, removeAll=True, append=final_shot_list)
+	
 
 
 		#each time you select a new name change the value of current_name variable
@@ -891,9 +911,19 @@ class PipelineApplication:
 				try:
 					if (name_selection[0] != self.current_name):
 						self.current_name = name_selection[0]
-						mc.textScrollList(self.name_list, edit=True, removeAll=True, append=final_name_list)
+						mc.textScrollList(self.name_list, edit=True, removeAll=True, append=final_name_list)				
 				except:
 					mc.textScrollList(self.name_list, edit=True, removeAll=True, append=final_name_list)
+
+				
+				try:
+					print(self.current_seq, seq_selection[0])
+					if (seq_selection[0] != self.current_seq):
+
+						self.current_seq = seq_selection[0]
+						mc.textScrollList(self.seq_list, edit=True, removeAll=True, append=final_seq_list)
+				except:
+					mc.textScrollList(self.seq_list, edit=True, removeAll=True, append=final_seq_list)
 		except:
 			pass
 
@@ -902,18 +932,24 @@ class PipelineApplication:
 
 
 
-	def check_syntax_from_selection_function(self, file, type_selection, kind_selection, name_selection):
+	def check_syntax_from_selection_function(self, file, type_selection, kind_selection, name_selection, seq_selection, shot_selection):
+		file, extension = os.path.splitext(file)
 		#get the selection in textscrolllist
 		error=False
 		final_name = None
 		splited_file = file.split("_")
 		current_type = None
+		final_seq = None 
+		final_shot = None
 		
 		if type_selection != None:
-			for type in type_selection:
+			for t in type_selection:
 				#get the syntax for the given type
-				type_syntax = self.settings[type][0]
+				type_syntax = self.settings[t][0]
 				splited_type_syntax = type_syntax.split("_")
+
+				if len(splited_type_syntax) != len(splited_file):
+					continue
 
 				#get the index of the keyword in the syntax
 				try:
@@ -923,40 +959,69 @@ class PipelineApplication:
 					return
 				
 
-				if splited_file[type_index] != self.settings[type][1]:
+				if splited_file[type_index] != self.settings[t][1]:
 					error=True 
 				else:
 					current_type = splited_file[type_index]
 					#detect the filename of the current file
+				
+					#print("[sqversion]" in splited_type_syntax, "[shversion]" in splited_type_syntax)
+					if '[sqversion]' in splited_type_syntax:
+						final_seq = splited_file[splited_type_syntax.index('[sqversion]')]
+					if '[shversion]' in splited_type_syntax:
+						final_shot = splited_file[splited_type_syntax.index('[shversion]')]
 					if '[name]' in splited_type_syntax:
 						final_name = splited_file[splited_type_syntax.index('[name]')]
 						#print("FOUND A NAME %s"%final_name)
 
 
-
-			if kind_selection != None:
-				for kind in kind_selection:
-					
-					try:
-						kind_index = splited_type_syntax.index('[type]')
-					except:
-						mc.error("No kind in the syntax!")
-						return
-					if splited_file[kind_index] != kind:
-						error=True
-
-			if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
-				if name_selection != None:
-					for name in name_selection:
+				if kind_selection != None:
+					for kind in kind_selection:
+						
 						try:
-							name_index = splited_type_syntax.index("[name]")
+							kind_index = splited_type_syntax.index('[type]')
 						except:
-							mc.error("No name in the syntax!")
+							mc.error("No kind in the syntax!")
 							return
+						print(splited_file, kind_index, kind)
+						if splited_file[kind_index] != kind:
+							error=True
 
-						if len(splited_file) == len(splited_type_syntax):
-							if splited_file[name_index] != name:
-								error=True
+
+				if seq_selection != None:
+					for seq in seq_selection:
+						try:
+							seq_index = splited_type_syntax.index("[sqversion]")
+						except:
+							mc.error("No sequence in the syntax!")
+							return 
+						print(splited_file)
+						print(seq_index)
+						if splited_file[seq_index] != seq:
+							error = True 
+
+				if shot_selection != None:
+					for shot in shot_selection:
+						try:
+							shot_index = splited_type_syntax.index('[shversion]')
+						except:
+							mc.error("No shot in the syntax!")
+							return 
+						if splited_file[shot_index] != shot:
+							error=True
+
+				if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
+					if name_selection != None:
+						for name in name_selection:
+							try:
+								name_index = splited_type_syntax.index("[name]")
+							except:
+								mc.error("No name in the syntax!")
+								return
+
+							if len(splited_file) == len(splited_type_syntax):
+								if splited_file[name_index] != name:
+									error=True
 
 
 
@@ -966,10 +1031,10 @@ class PipelineApplication:
 
 
 		if error==True:
-			return False, False
+			return False, False, False, False
 		else:
 			
-			return final_name, current_type
+			return final_name, current_type, final_seq, final_shot
 
 
 
@@ -1416,6 +1481,9 @@ class PipelineApplication:
 		#save the current file
 		#rename the current file
 		#save the renamed 
+		confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+		if confirm_saving == "No":
+			return
 		if os.path.isfile(final_filename)==False:
 			try:
 				mc.file(save=True)
@@ -1677,6 +1745,10 @@ class PipelineApplication:
 							break
 			if version_present==False:
 				splited_name.insert(0, "Publish")
+
+			confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+			if confirm_saving == "No":
+				return
 			filename = "_".join(splited_name)+extension
 			mc.file(save=True)
 			#save the new file at the new destination
@@ -1744,7 +1816,9 @@ class PipelineApplication:
 						if version_present==False:
 							splited_name.insert(0, "Publish")
 						filename = "_".join(splited_name)+extension
-						
+						confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+						if confirm_saving == "No":
+							return
 						#save the current file
 						mc.file(save=True)
 						#save the new file at the new destination
@@ -2473,6 +2547,7 @@ class PipelineApplication:
 				mc.error("Impossible to detect a default folder in settings!")
 				return
 			splited_default_folder = default_folder_path.split("/")
+			print("\nDefault folder found in the settings:")
 			print(splited_default_folder)
 			for i in range(0, len(splited_default_folder)):
 				#KEYWORD CONDITIONS
@@ -2531,7 +2606,7 @@ class PipelineApplication:
 						else:
 							final_filepath.append(self.additionnal_settings["editPublishFolder"][0])
 
-
+					
 					if splited_default_folder[i] == "[sqversion]":
 						sequence = str(mc.intField(self.export_edit_sequence_intfield, query=True, value=True))
 						if len(list(sequence)) == 1:
@@ -2539,6 +2614,7 @@ class PipelineApplication:
 						else:
 							sequence = "sq0%s"%sequence 
 						final_filepath.append(sequence)
+
 					if splited_default_folder[i] == "[shversion]":
 						sequence = str(mc.intField(self.export_edit_shot_intfield, query=True, value=True))
 						if len(list(sequence)) == 1:
@@ -2546,6 +2622,8 @@ class PipelineApplication:
 						else:
 							sequence = "sh0%s"%sequence 
 						final_filepath.append(sequence)
+					
+
 
 						
 				
@@ -2600,7 +2678,10 @@ class PipelineApplication:
 		print("Returned filepath : [%s]"%filepath)
 		
 		#save the current scene with current filename
-
+		#ask for confirmation
+		confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+		if confirm_saving == "No":
+			return
 
 
 
@@ -2696,7 +2777,10 @@ class PipelineApplication:
 		print("Returned filepath : [%s]"%filepath)
 		print(final_path)
 
-		
+		#ASK FOR CONFIRMATION
+		confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+		if confirm_saving == "No":
+			return
 
 		if info == "standard":
 			"""
@@ -2917,23 +3001,24 @@ class PipelineApplication:
 
 
 	def create_new_item_template_function(self, command, event):
+		
+		item_name = [mc.textField(self.export_edit_name_textfield, query=True, text=True)]
+		item_seq = mc.intField(self.export_edit_sequence_intfield, query=True, value=True)
+		item_shot = mc.intField(self.export_edit_shot_intfield, query=True, value=True)
+
+		"""
+		if (self.letter_verification_function(item_name) == False) or (self.letter_verification_function(item_name) == None):
+			item_name = """
+
+
 		#get informations to create new item architecture
-		if mc.checkBox(self.template_fromselection_checkbox, query=True, value=True)==False:
-			item_name = [mc.textField(self.export_edit_name_textfield, query=True, text=True)]
-		else:
-			item_name = mc.ls(sl=True)
+		
 		template_name = mc.textScrollList(self.template_textscrolllist, query=True, si=True)
 		template_type = mc.textScrollList(self.export_type_textscrolllist, query=True, si=True)
+		#template_version = mc.intField(self.export_edit_version_intfield, query=True, value=True)
+		
 
-		if type(item_name) == str:
-			if self.letter_verification_function(item_name) != True:
-				mc.error("You have to define a name for the new item to create!")
-				return
-		elif type(item_name) == list:
-			if len(item_name) == 0:
-				mc.error("You have to select items!")
-		else:
-			mc.error("You have to select items!")
+		
 		if template_name == None:
 			mc.error("You have to pick a template!")
 			return
@@ -2942,15 +3027,20 @@ class PipelineApplication:
 			mc.error("You have to pick a type!")
 			return
 
+		print(item_name, len(item_name))
 
-		#print(self.settings_dictionnary[template_type[0]])
-		if (self.settings[template_type[0]][2] == None) or ("[key]" in self.settings[template_type[0]][2])==False:
-			mc.error("You have to define a default folder, with a [key] inside!")
-			return
-		for name in item_name:
+		for i in range(0, len(item_name)):
 			starting_folder = self.settings[template_type[0]][2]
+			print(starting_folder)
 
-			while os.path.basename(starting_folder) != "[key]":
+
+			if '[key]' in starting_folder:
+				dodge = "[key]"
+			if '[sqversion]' in starting_folder:
+				dodge = "[sqversion]"
+			if '[shversion]' in starting_folder:
+				dodge = '[shversion]'
+			while os.path.basename(starting_folder) != dodge:
 				starting_folder = os.path.dirname(starting_folder)
 
 		
@@ -2959,8 +3049,15 @@ class PipelineApplication:
 				
 			if ("[key]" in starting_folder):
 				starting_folder = starting_folder.replace("[key]",template_type[0])
+
+			#print(starting_folder, "[name]" in starting_folder)
 			if ("[name]" in starting_folder):
-				starting_folder = starting_folder.replace("[name]", name)
+				print(self.letter_verification_function(item_name[i]), item_name[i])
+				if self.letter_verification_function(item_name[i]) ==True:
+					starting_folder = starting_folder.replace("[name]", item_name[i])
+				else:
+					mc.error("[name] folder impossible to create!")
+					return 
 
 			if ("[mayaProjectName]" in starting_folder):
 				starting_folder = starting_folder.replace("[mayaProjectName]", self.additionnal_settings["mayaProjectName"])
@@ -2969,13 +3066,32 @@ class PipelineApplication:
 				mc.error("Impossible to create new item with that default folder architecture!")
 				return
 
+			
+			if ("[sqversion]" in starting_folder):
+				print("sequence detected!")
+				if len(list(str(item_seq))) == 1:
+					item_seq = "sq00%s"%str(item_seq)
+				else:
+					item_seq = "sq0%s"%str(item_seq)
+				starting_folder = starting_folder.replace("[sqversion]", item_seq)
+
+			if ("[shversion]" in starting_folder):
+				print("shot detected!")
+				if len(list(str(item_shot))) == 1:
+					item_shot = "sh00%s"%str(item_shot)
+				else:
+					item_shot = "sh0%s"%str(item_shot)
+				starting_folder = starting_folder.replace("[shversion]", item_shot)
+
+
+
 
 			#add the name of the new folder to the starting path
-			starting_folder = os.path.join(starting_folder, name)
+			
+			if self.letter_verification_function(item_name[i]) ==True:
+				starting_folder = os.path.join(starting_folder, item_name[i])
 			#check and create all folders of the starting folder
 			os.makedirs(starting_folder, exist_ok=True)
-
-			
 
 			#get the template folder list
 			try:
@@ -3002,6 +3118,7 @@ class PipelineApplication:
 					folder_full_path = starting_folder+folder
 					folder_to_create.append(folder_full_path.replace('\\', '/'))
 
+				
 				#create the folder list
 				for folder in folder_to_create:
 					try:
@@ -3011,7 +3128,10 @@ class PipelineApplication:
 						mc.warning("Failed to create folder [%s]"%folder)
 						continue
 
-				#try to save the first edit file inside that folder architecture
+				
+
+			
+			
 
 
 
@@ -3397,7 +3517,7 @@ class PipelineApplication:
 
 
 
-	def get_current_scene_name_function(self):
+	def get_current_scene_name_function(self, event):
 		"""
 		get the current path of the scene
 		get the current filename
@@ -3406,7 +3526,7 @@ class PipelineApplication:
 		get the item name from the filename
 		"""
 		current_filepath = mc.file(sceneName=True, query=True)
-		if os.path.isdir(current_filepath) != True:
+		if os.path.isfile(current_filepath) != True:
 			mc.warning("Impossible to get the current name!")
 			return
 		path = os.path.dirname(current_filepath)
@@ -3414,8 +3534,22 @@ class PipelineApplication:
 		filename, extension = os.path.splitext(filename)
 
 		#go through the settings
-		value = self.parse_file_function(filename)
-		print(value)
+		splited_file = filename.split("_")
+		for content in splited_file:
+			
+			for setting_name, setting_content in self.settings.items():
+				if content == setting_content[1]:
+					#get syntax
+					if len(splited_file) == len(setting_content[0].split("_")):
+						#check if the keyword name is in the syntax
+						try:
+							name_index = (setting_content[0].split("_")).index("[name]")
+							name_in_filename = splited_file[name_index]
+						except:
+							mc.error("Impossible to get name in the actual file!")
+							return
+						print("\nScene name found in filename!")
+						mc.textField(self.export_edit_name_textfield, edit=True, text=name_in_filename)
 
 
 

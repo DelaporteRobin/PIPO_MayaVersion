@@ -55,7 +55,8 @@ class PipelineObserverApplication:
 
 			if "[type]" in splited_syntax:
 				index = splited_syntax.index("[type]")
-		
+				#print(key)
+				#print(self.settings_dictionnary)
 				if (splited_filename[index] in self.settings_dictionnary[key])==False:
 		
 					#print("type error")
@@ -168,34 +169,36 @@ class PipelineObserverApplication:
 	
 		self.pipeline_index = {}
 
-		try:
-			for root, dirs, files in os.walk(project_path):
+		#try:
+		for root, dirs, files in os.walk(project_path):
+			
+			
+			for f in files:
 				
+				value = self.parse_file_function(f)
 				
-				for f in files:
-					
-					value = self.parse_file_function(f)
-					
 
 
-					filename, extension = os.path.splitext(os.path.basename(f))
-					
-					if value!=False:
-						#print(value, f)
-					
-							
-						self.pipeline_index[f] = {
-							"path":(r""+root).replace("\\", "/").replace(os.sep, "/"),
-							"fullpath": (r""+os.path.join(root, f)).replace("\\", "/").replace(os.sep, "/"),
-							"filename":filename,
-							}
-			self.save_pipeline_index_function()	
+				filename, extension = os.path.splitext(os.path.basename(f))
+				
+				if value!=False:
+					#print(value, f)
+				
+						
+					self.pipeline_index[f] = {
+						"path":(r""+root).replace("\\", "/").replace(os.sep, "/"),
+						"fullpath": (r""+os.path.join(root, f)).replace("\\", "/").replace(os.sep, "/"),
+						"filename":filename,
+						}
+		self.save_pipeline_index_function()	
 
-			print("Done searching in %s"%project_path)
-		
+		print("Done searching in %s"%project_path)
+		"""
 		except:
 			mc.error("Impossible to create pipeline index!")
 			return
+
+		"""
 		
 		
 

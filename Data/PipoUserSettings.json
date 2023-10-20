@@ -2,7 +2,7 @@
     "dict1": {
         "checkboxValuesMainPage": [
             false,
-            false,
+            true,
             true,
             false,
             false
@@ -12,8 +12,8 @@
             false
         ],
         "checkboxValuesTextureLinkingPanel": [
-            false,
             true,
+            false,
             true,
             true
         ],
@@ -26,7 +26,7 @@
             true,
             false,
             false,
-            false
+            true
         ],
         "FavoriteFiles": {},
         "ExportRaimbow": true,
