@@ -283,6 +283,7 @@ class PipelineApplication:
 			"renderEngine":"Renderman",
 			"renderShaderNodeList":["lambert"]
 		}
+		"""
 		self.user_settings = {
 			"checkboxValuesMainPage":[False, True, True, False, False],
 			"checkboxValuesRenamePanel":[False, False],
@@ -292,6 +293,32 @@ class PipelineApplication:
 			"FavoriteFiles":{},
 			"ExportRaimbow":True,
 			"ExportWebsite":True,
+		}
+		"""
+		self.user_settings = {
+			"index_checkbox":True,
+			"projectcontent_checkbox":False,
+			"searchbar_checkbox":False,
+			"folder_checkbox":True,
+			"scenes_checkbox":True,
+			"items_checkbox":True,
+			"textures_checkbox":False,
+
+			"archivemenu_projectcheckbox":False,
+			"archivemenu_pipelinecheckbox":False,
+
+			"render_texture_manual_checkbox":True,
+			"render_texture_automatic_checkbox":False,
+			"render_texture_limit_project":False,
+			"render_texture_udim_checking":True,
+
+			"export_current_folder_checkbox":False,
+			"export_custom_folder_checkbox":False,
+			"export_assist_folder_checkbox":False,
+			"export_projectassist_folder_checkbox":True,
+			"export_item_checkbox":True,
+			"export_edit_name_checkbox":False,
+			"export_backup_publish_checkbox":True,
 		}
 		
 		self.texture_settings = {
@@ -385,15 +412,30 @@ class PipelineApplication:
 			"renderEngine":"Renderman",
 			"renderShaderNodeList":["lambert"],
 		}
-		self.default_user_settings = {
-			"checkboxValuesMainPage":[False, True, True, False, False],
-			"checkboxValuesRenamePanel":[False, False],
-			"checkboxValuesTextureLinkingPanel":[True, False, True, True],
-			"checkboxValuesMissingFramesPanel":[False],
-			"checkboxValuesExportPanel":[False, False, True, False, False, False],
-			"FavoriteFiles":{},
-			"ExportRaimbow":True,
-			"ExportWebsite":True,
+		self.user_settings = {
+			"index_checkbox":True,
+			"projectcontent_checkbox":False,
+			"searchbar_checkbox":False,
+			"folder_checkbox":True,
+			"scenes_checkbox":True,
+			"items_checkbox":True,
+			"textures_checkbox":False,
+
+			"archivemenu_projectcheckbox":False,
+			"archivemenu_pipelinecheckbox":False,
+
+			"render_texture_manual_checkbox":True,
+			"render_texture_automatic_checkbox":False,
+			"render_texture_limit_project":False,
+			"render_texture_udim_checking":True,
+
+			"export_current_folder_checkbox":False,
+			"export_custom_folder_checkbox":False,
+			"export_assist_folder_checkbox":False,
+			"export_projectassist_folder_checkbox":True,
+			"export_item_checkbox":True,
+			"export_edit_name_checkbox":False,
+			"export_backup_publish_checkbox":True,
 		}
 		
 		self.default_texture_settings = {
@@ -2355,11 +2397,32 @@ class PipelineApplication:
 		self.additionnal_settings["3dSceneExtension"] = scenes_extension_list
 		self.additionnal_settings["3dItemExtension"] = items_extension_list
 		self.additionnal_settings["texturesExtension"] = textures_extension_list
-		self.user_settings["checkboxValuesMainPage"] = [mc.checkBox(self.searchbar_checkbox, query=True, value=True), mc.checkBox(self.folder_checkbox, query=True, value=True), mc.checkBox(self.scenes_checkbox, query=True, value=True), mc.checkBox(self.items_checkbox, query=True, value=True), mc.checkBox(self.textures_checkbox, query=True, value=True)]
-		self.user_settings["checkboxValuesRenamePanel"] = [mc.checkBox(self.hardrename_checkbox_file, query=True, value=True), mc.checkBox(self.hardrename_checkbox_folder, query=True, value=True)]
-		self.user_settings["checkboxValuesTextureLinkingPanel"] = [mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True), mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True), mc.checkBox(self.render_texture_limit_project, query=True, value=True), mc.checkBox(self.render_texture_udim_checking, query=True, value=True)]
-		self.user_settings["checkboxValuesMissingFramesPanel"] = [mc.checkBox(self.render_checking_checkbox, query=True, value=True)]
-		self.user_settings["checkboxValuesExportPanel"] = [mc.checkBox(self.export_current_folder_checkbox, query=True, value=True), mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True), mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True), mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True), mc.checkBox(self.template_fromselection_checkbox, query=True, value=True), mc.checkBox(self.export_edit_name_checkbox, query=True, value=True)]
+		
+		self.user_settings = {
+			"index_checkbox": mc.checkBox(self.index_checkbox, query=True, value=True),
+			"projectcontent_checkbox":mc.checkBox(self.projectcontent_checkbox, query=True, value=True),
+			"searchbar_checkbox":mc.checkBox(self.searchbar_checkbox, query=True, value=True),
+			"folder_checkbox":mc.checkBox(self.folder_checkbox, query=True, value=True),
+			"scenes_checkbox":mc.checkBox(self.scenes_checkbox, query=True, value=True),
+			"items_checkbox":mc.checkBox(self.items_checkbox, query=True, value=True),
+			"textures_checkbox":mc.checkBox(self.textures_checkbox, query=True, value=True),
+
+			"archivemenu_projectcheckbox":mc.checkBox(self.archivemenu_projectcheckbox, query=True, value=True),
+			"archivemenu_pipelinecheckbox":mc.checkBox(self.archivemenu_pipelinecheckbox, query=True, value=True),
+
+			"render_texture_manual_checkbox":mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True),
+			"render_texture_automatic_checkbox":mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True),
+			"render_texture_limit_project":mc.checkBox(self.render_texture_limit_project, query=True, value=True),
+			"render_texture_udim_checking":mc.checkBox(self.render_texture_udim_checking, query=True, value=True),
+
+			"export_current_folder_checkbox":mc.checkBox(self.export_current_folder_checkbox, query=True, value=True),
+			"export_custom_folder_checkbox":mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True),
+			"export_assist_folder_checkbox":mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True),
+			"export_projectassist_folder_checkbox":mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True),
+			"export_item_checkbox":mc.checkBox(self.export_item_checkbox, query=True, value=True),
+			"export_edit_name_checkbox":mc.checkBox(self.export_edit_name_checkbox, query=True, value=True),
+			"export_backup_publish_checkbox":mc.checkBox(self.export_backup_publish_checkbox, query=True, value=True),
+		}
 
 		"""
 		self.default_additional_settings = {

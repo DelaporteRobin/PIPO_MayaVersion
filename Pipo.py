@@ -465,8 +465,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 	
 		#SEARCHBAR
 		self.searchbar_limit_frame = mc.frameLayout(backgroundColor=self.bright_color, parent=self.assets_main_leftcolumn, label="Research settings", collapsable=True, collapse=True)
-		self.index_checkbox = mc.checkBox(label="Use Index file", value=True, parent=self.searchbar_limit_frame)
-		self.projectcontent_checkbox = mc.checkBox(label="Only display project name", value=True, parent=self.searchbar_limit_frame)
+		self.index_checkbox = mc.checkBox(label="Use Index file", value=True, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
+		self.projectcontent_checkbox = mc.checkBox(label="Only display project name", value=True, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
 		mc.separator(style="singleDash", height=5, parent=self.searchbar_limit_frame)
 		self.searchbar_checkbox = mc.checkBox(label="Limit research to project", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "project"))
 		self.folder_checkbox = mc.checkBox(label="Limit research to default\nfolder", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "folder"))
@@ -788,7 +788,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.template_textscrolllist = mc.textScrollList(numberOfRows=5, parent=self.export_leftcolumn)
 		self.export_edit_name_checkbox = mc.checkBox(label="Keep same name", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=True, parent=self.export_leftcolumn)
 		mc.button(label="Get current name", parent=self.export_leftcolumn, command=self.get_current_scene_name_function)
-		mc.separator(style="singleDash", height=2, parent=self.export_leftcolumn)
+		mc.separator(style="singleDash", height=10, parent=self.export_leftcolumn)
 		mc.text(label="Item Name", align="left", parent=self.export_leftcolumn)
 		self.export_edit_name_textfield = mc.textField(parent=self.export_leftcolumn)
 
@@ -816,6 +816,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.button(label="Export selected", parent=self.export_edit_frame, command=partial(self.export_edit_function, "selection"))
 
 		self.export_publish_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Export publish files", parent=self.export_leftcolumn, collapsable=True, collapse=True)
+		self.export_backup_publish_checkbox = mc.checkBox(label="Backup existing publish", value=True)
 		mc.button(label="Save Publish", parent=self.export_publish_frame, command=partial(self.export_publish_function, "standard"),backgroundColor=self.dark_color)
 		#self.export_publish_keepname_checkbox = mc.checkBox(label="Keep item name", parent=self.export_leftcolumn)
 		mc.button(label="Publish selected", parent=self.export_publish_frame,command=partial(self.export_publish_function, "selection"))
@@ -873,41 +874,12 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 	
 	
 	def apply_user_settings_function(self):
-		if (self.program_folder != None) and (self.program_folder != "None"):
+		#go through the user settings dictionnary and apply checkbox values
+		for key, value in self.user_settings.items():
 			try:
-				mc.checkBox(self.searchbar_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][0])
-				mc.checkBox(self.folder_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][1])
-				mc.checkBox(self.scenes_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][2])
-				mc.checkBox(self.items_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][3])
-				mc.checkBox(self.textures_checkbox, edit=True, value=self.user_settings["checkboxValuesMainPage"][4])
-
-				mc.checkBox(self.hardrename_checkbox_file, edit=True, value=self.user_settings["checkboxValuesRenamePanel"][0])
-				mc.checkBox(self.hardrename_checkbox_folder, edit=True, value=self.user_settings["checkboxValuesRenamePanel"][1])
-
-				mc.checkBox(self.render_texture_manual_checkbox, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][0])
-				mc.checkBox(self.render_texture_automatic_checkbox, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][1])
-				mc.checkBox(self.render_texture_limit_project, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][2])
-				mc.checkBox(self.render_texture_udim_checking, edit=True, value=self.user_settings["checkboxValuesTextureLinkingPanel"][3])
-
-				mc.checkBox(self.render_checking_checkbox, edit=True, value=self.user_settings["checkboxValuesMissingFramesPanel"][0])
-
-				mc.checkBox(self.export_current_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][0])
-				mc.checkBox(self.export_custom_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][1])
-				mc.checkBox(self.export_assist_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][2])
-				mc.checkBox(self.template_fromselection_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][4])
-				mc.checkBox(self.export_edit_name_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][5])
-				mc.checkBox(self.export_projectassist_folder_checkbox, edit=True, value=self.user_settings["checkboxValuesExportPanel"][3])
-
-
-				favorite_files = self.user_settings["FavoriteFiles"]
-				favorite_file_list = list(favorite_files.keys())
-				mc.textScrollList(self.favorite_list, edit=True, removeAll=True, append=favorite_file_list)
-
-			
+				exec('mc.checkBox(self.%s, edit=True, value=%s)'%(key, value))
 			except:
-				mc.warning("Impossible to apply user settings on GUI!")
-				return
-			
+				mc.warning("Checkbox skipped - %s"%key)
 
 
 	def update_archive_checkbox_function(self, command, event):
