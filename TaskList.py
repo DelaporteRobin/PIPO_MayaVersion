@@ -27,4 +27,19 @@ create a new export mode (by default)
    --> use default folder + current project folder
 
 
+
+
+CURRENT PROJECT DEFAULT FOLDER ASSIST
+   
+   default folder path:
+   "[Origin]/04_asset/[key]/[name]/[mayaProjectName]/scenes/[editPublishFolder]/[type]"
+   
+   current project path:
+   "[Origin]/04_asset/[key]/[name]/[mayaProjectName]"
+
+   -> get both informations
+   -> get current maya project
+   -> get default folder path after maya project
+   -> merge both path
+   
 """

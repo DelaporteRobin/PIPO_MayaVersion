@@ -595,15 +595,16 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		
 		mc.separator(style="none", height=20, parent=self.archive_leftcolumn)
 		mc.button(label="Scan pipeline\nto find archives", parent=self.archive_leftcolumn)
-		mc.button(label="Import files in project", parent=self.archive_leftcolumn)
+		mc.button(label="Tidy files in pipeline", parent=self.archive_leftcolumn, command=self.archive_tidy_files_function)
+		mc.button(label="Import files in current project", parent=self.archive_leftcolumn)
 		mc.button(label="Generate download link\nfrom archive", parent=self.archive_leftcolumn)
-		mc.button(label="Delete archive", parent=self.archive_leftcolumn)
+		mc.button(label="Delete archive", parent=self.archive_leftcolumn, command=self.delete_archive_function)
 
 		mc.text(label="Archive list", parent=self.archive_centercolumn)
 		self.archive_archivelist_textscrolllist = mc.textScrollList(numberOfRows=15, parent=self.archive_centercolumn, selectCommand=self.display_archive_content_function)
 
 		mc.text(label="Archive content", parent=self.archive_rightcolumn)
-		self.archive_archivecontent_textscrolllist = mc.textScrollList(numberOfRows=15, parent=self.archive_rightcolumn)
+		self.archive_archivecontent_textscrolllist = mc.textScrollList(numberOfRows=15, parent=self.archive_rightcolumn, allowMultiSelection=True)
 
 
 
@@ -611,10 +612,10 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 		archive_key = list(self.archive_data.keys())
-		for i in range(0, len(archive_key)):
-			archive_key[i] = archive_key[i].replace("PipoArchive_", "")
-		mc.textScrollList(self.archivemenu_textscrolllist, edit=True, append=archive_key)
-		mc.textScrollList(self.archive_archivelist_textscrolllist, edit=True, append=archive_key)
+		#for i in range(0, len(archive_key)):
+		#	archive_key[i] = archive_key[i].replace("PipoArchive_", "")
+		self.refresh_archive_list_function("content")
+	
 
 
 		

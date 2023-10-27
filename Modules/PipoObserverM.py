@@ -42,6 +42,8 @@ class PipelineObserverApplication:
 			saved_key = None
 			saved_type = None
 			saved_name = None
+			sqversion = None 
+			shversion = None
 
 			syntax = value[0]
 			splited_syntax = syntax.split("_")
@@ -101,6 +103,8 @@ class PipelineObserverApplication:
 							#print("sqversion error")
 							error=True 
 							continue
+						else:
+							sqversion = splited_filename[index]
 							
 
 							
@@ -111,6 +115,8 @@ class PipelineObserverApplication:
 						#print("shversion error")
 						error=True 
 						continue
+					else:
+						shversion = splited_filename[index]
 						
 
 						
@@ -131,7 +137,14 @@ class PipelineObserverApplication:
 					continue
 
 			if error==False:
-				return (file_name, key, saved_type)
+				#return (file_name, key, saved_type)
+				return {
+					"file_name":file_name,
+					"key":key,
+					"saved_type":saved_type,
+					"sqversion":sqversion,
+					"shversion":shversion,
+				}
 		return False
 			
 		

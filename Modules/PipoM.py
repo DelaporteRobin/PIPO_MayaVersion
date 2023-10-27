@@ -735,9 +735,9 @@ class PipelineApplication:
 						#print("CHECKING %s"%file)
 						if value != False:
 
-							filename = value[0]
-							key = value[1]
-							saved_type = value[2]
+							filename = value["file_name"]
+							key = value["key"]
+							saved_type = value["saved_type"]
 
 
 							#split the checked filename and check if the keyword name and type are the right ones
@@ -853,7 +853,7 @@ class PipelineApplication:
 
 						if display == True:	
 							#print("file matching [%s]"%file)
-							print("checking for the file %s"%file)
+							#print("checking for the file %s"%file)
 
 							if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
 								if file not in final_file_list:
@@ -2840,10 +2840,25 @@ class PipelineApplication:
 		print("Returned filepath : [%s]"%filepath)
 		print(final_path)
 
+		#check the value of the overwrite publish or create publish backup if publish is existing
+		#if the publish already exists rename it under a new name (file_publish.ma.backup)
+		if mc.checkBox(self.export_backup_publish_checkbox, query=True, value=True)==True:
+			#check if the publish already exists
+			if os.path.isfile(final_path)==True:
+				#change the name of the current publish
+				try:
+					os.rename(final_path, "%s.backup"%final_path)
+				except:
+					mc.error("Impossible to create the backup file for the publish!")
+					return
+
 		#ASK FOR CONFIRMATION
 		confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
 		if confirm_saving == "No":
 			return
+
+
+
 
 		if info == "standard":
 			"""
@@ -3372,10 +3387,29 @@ class PipelineApplication:
 		final_file_list = []
 		#create final file list
 
-		for root, dirs, files in os.walk(mc.textField(self.project_label, query=True, text=True)):
-			for f in files:
-				if f in file_selection:
-					final_file_list.append(os.path.join(root, f))
+
+
+		#check file in index
+		#or get the file in the pipeline
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==True:
+			for f in file_selection:
+				try:
+					filepath = self.pipeline_index[f]["fullpath"]
+					print(filepath)
+					if os.path.isfile(filepath)==False:
+						mc.warning("That file doesn't exist anymore in the pipeline!\n[%s]"%f)
+						continue
+					final_file_list.append(filepath)
+					print("File located in index [%s]"%f)
+				except:
+					mc.warning("File skipped, Impossible to find the file in the pipeline index!\n[%s]"%f)
+
+		else:
+			for root, dirs, files in os.walk(mc.textField(self.project_label, query=True, text=True)):
+				for f in files:
+					if f in file_selection:
+						final_file_list.append(os.path.join(root, f))
+
 		if len(final_file_list)==0:
 			mc.error("No files to add!")
 			return
@@ -3390,13 +3424,19 @@ class PipelineApplication:
 				mc.error("An archive with that name already exist!")
 				return
 			else:
-				archive_data[archive_name] = archive_path
+				archive_data[archive_name] = {
+					"archive_path":archive_path,
+					"origin_filepath":final_file_list
+					}
 				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "wb") as save_file:
 					pickle.dump(archive_data, save_file)
 		except:
 			#create the archive file with the new archive
 			archive_data = {
-				archive_name:archive_path
+				archive_name: {
+					"archive_path":archive_path,
+					"origin_filepath":final_file_list,
+					}
 			}
 			os.makedirs(os.path.join(project_path, "PipelineManagerData"), exist_ok=True)
 			with open(os.path.join(project_path, "PipelineManagerData/ArchiveData.dll"), "wb") as save_file:
@@ -3431,6 +3471,9 @@ class PipelineApplication:
 		print("Files total size : %s"%size)
 		print("Archive size : %s"%archive_size)
 
+		#increment the archive list dictionnary
+		self.archive_data[archive_name] = archive_path
+
 		mc.textScrollList(self.archivemenu_textscrolllist, edit=True, removeAll=True, append=list(archive_data.keys()))
 		mc.textScrollList(self.archive_archivelist_textscrolllist, edit=True, removeAll=True, append=list(archive_data.keys()))
 
@@ -3440,19 +3483,38 @@ class PipelineApplication:
 
 	def display_archive_content_function(self):
 		#get archive selection
+		for key,value in self.archive_data.items():
+			print(key, value)
 		archive_selection = mc.textScrollList(self.archive_archivelist_textscrolllist, query=True, si=True)
 		if archive_selection == None:
 			mc.error("You have to select an archive!")
 			return
-		archive_selection = "PipoArchive_"+archive_selection[0]
+		#archive_selection = "PipoArchive_%s"%archive_selection[0]
+		archive_selection = archive_selection[0]
 		archive_keys = list(self.archive_data.keys())
 		archive_values = list(self.archive_data.values())
-		try:
-			archive_index = archive_keys.index(archive_selection)
-		except:
-			mc.error("Impossible to find the archive!\nScan your pipeline!")
-			return
-		archive_path = archive_values[archive_index]
+		
+		print("content")
+		print(archive_selection)
+		print(archive_keys)
+		print(archive_values)
+		print("\n")
+		if archive_selection not in archive_keys:
+			mc.error("Impossible to find the archive in the index!")
+			return 
+		#print(archive_keys.index(archive_selection))
+
+		archive_index = archive_keys.index(archive_selection)
+		archive_values = archive_values[archive_index]
+		if type(archive_values)==dict:
+			archive_path = archive_values["archive_path"]
+		else:
+			archive_path = archive_values
+		print(archive_path)
+
+		
+
+
 		if os.path.isfile(archive_path)==False:
 			mc.error("This archive doesn't exist : %s"%archive_path)
 			return
@@ -3461,11 +3523,43 @@ class PipelineApplication:
 			try:
 				with zipfile.ZipFile(archive_path) as archive:
 					content = archive.namelist()
-				mc.textScrollList(self.archive_archivecontent_textscrolllist, edit=True, append=content)
+				mc.textScrollList(self.archive_archivecontent_textscrolllist, edit=True, removeAll=True, append=content)
 			except:
 				mc.error("Impossible to read the archive!")
 				return
 
+
+
+
+
+
+
+	def refresh_archive_list_function(self, event):
+		project_path = mc.textField(self.project_label, query=True, text=True)
+		if os.path.isdir(project_path)==False:
+			mc.error("No project defined or existing, Impossible to refresh archive!")
+			return
+
+		#go through the archive data file and check if all archives exists
+		#if no, remove from the list and the file
+		new_archive_dictionnary = {}
+		for archive_name, archive_data in self.archive_data.items():
+			if os.path.isfile(archive_data["archive_path"])==True:
+				new_archive_dictionnary[archive_name] = {
+					"archive_path":archive_data["archive_path"],
+					"origin_filepath":archive_data["origin_filepath"],
+					}
+		archive_key_list = list(new_archive_dictionnary.keys())
+		#for i in range(0, len(archive_key_list)):
+		#	archive_key_list[i] = archive_key_list[i].replace("PipoArchive_", "")
+		mc.textScrollList(self.archivemenu_textscrolllist, edit=True, removeAll=True, append=archive_key_list)
+		mc.textScrollList(self.archive_archivelist_textscrolllist, edit=True, removeAll=True, append=archive_key_list)
+
+		os.makedirs(os.path.join(project_path, "PipelineManagerData"), exist_ok=True)
+		with open(os.path.join(project_path, "PipelineManagerData/ArchiveData.dll"), "wb") as save_file:
+			pickle.dump(new_archive_dictionnary, save_file)	
+		print("Archive data refreshed!")
+		return
 
 
 
@@ -3533,6 +3627,111 @@ class PipelineApplication:
 
 					print("Archive size before : %s"%archive_size_before)
 					print("Archive size after : %s\n"%archive_size_after)
+
+
+
+
+
+	def delete_archive_function(self, event):
+		#detect the archive in the index
+		#get the path
+		#remove the file and delete the key from the dictionnary
+		#in the end update the textscrolllist
+		#
+		#simple and efficient
+		try:
+			archive_selection = mc.textScrollList(self.archive_archivelist_textscrolllist, query=True, si=True)[0]
+		except:
+			mc.error("You have to select an archive to remove!")
+			return
+		archive_keys = list(self.archive_data.keys())
+		archive_values = list(self.archive_data.values())
+		
+		#get the path
+		try:
+			archive_path = archive_values[archive_keys.index(archive_selection)]["archive_path"]
+		except:
+			mc.error("Impossible to find the archive in data!")
+			return
+		#remove the file
+		#remove the key in the dictionnary
+		print("Archive to delete : %s"%archive_path)
+		if os.path.isfile(archive_path)==True:
+			os.remove(archive_path)
+			print("Archive removed!")
+		else:
+			mc.warning("Impossible to remove the archive!")
+
+		project_path = mc.textField(self.project_label, query=True, text=True)
+		if os.path.isdir(project_path)==False:
+			mc.error("No project defined, Impossible to refresh archive data!")
+			return
+		self.archive_data.pop(archive_selection)
+		with open(os.path.join(project_path, "ArchiveData.dll"), "wb") as save_content:
+			pickle.dump(self.archive_data, save_content)
+		print("Archive data updated!")
+
+		mc.textScrollList(self.archive_archivelist_textscrolllist, edit=True, removeAll=True, append=list(self.archive_data.keys()))
+		mc.textScrollList(self.archivemenu_textscrolllist, edit=True, removeAll=True, append=list(self.archive_data.keys())) 
+		mc.textScrollList(self.archive_archivecontent_textscrolllist, edit=True, removeAll=True)
+
+
+
+
+	def archive_tidy_files_function(self, event):
+		"""
+		take the file selected
+		the name of the archive
+		get the path of the selected archive
+
+		extract files from the archive
+		parse their nomenclature
+		get the default folder path if possible
+		else tidy them at the root of the pipeline
+		"""
+		try:
+			archive_name_selected = mc.textScrollList(self.archive_archivelist_textscrolllist, query=True, si=True)[0]
+		except:
+			mc.error("You have to select an archive!")
+			return 
+
+		archive_content_selected = mc.textScrollList(self.archive_archivecontent_textscrolllist, query=True, si=True)
+
+		if (archive_content_selected == None) or (len(archive_content_selected) == 0):
+			mc.error("You have to select at least one file to extract!")
+			return 
+		
+		archive_keys = list(self.archive_data.keys())
+		archive_values = list(self.archive_data.values())
+
+		archive_path = archive_values[archive_keys.index(archive_name_selected)]
+	
+
+		print("ARCHIVE PATH\n%s"%archive_path)
+		print("Files to extract:")
+		for file in archive_content_selected:
+			print(file)
+
+			value = self.parse_file_function(file)
+			
+			"""
+			IF THE VALUE IS DIFFERENT FROM FALSE PUT THE FILES AT THE RIGHT LOCATION IN THE PIPELINE
+			ELSE PUT THE FILES AT THE ROOT OF THE PIPELINE
+			"""
+			if value != False:
+				#try to find the origin location in the archive data
+				origin_path = self.archive_data[archive_name_selected]["origin_filepath"]
+				print("ORIGIN FILE PATH")
+				print(origin_path)
+
+			else:
+				print("IMPOSSIBLE TO FIND DEFAULT FOLDER!")
+				print("\n")
+
+
+
+		#for each file in the selection parse the file and get the extraction path
+
 
 
 
