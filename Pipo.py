@@ -113,8 +113,12 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 	def __init__(self):
 
-		self.bright_color = [0.570, 0.166, 0.0855]
-		self.dark_color = [0.250, 0.158, 0.140]
+		self.moment1 = datetime.now()
+
+		self.bright_color = [0.118,0.027,0.251]
+		self.dark_color = [0.118,0.027,0.251]
+		#self.bright_color = [0.570, 0.166, 0.0855]
+		#self.dark_color = [0.250, 0.158, 0.140]
 
 		print("Pipo Launching...")
 		self.current_name = None
@@ -170,6 +174,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			
 		else:
 			self.pipo_shelf = mc.shelfLayout("PipoShelf", query=True, fullPathName=True)
+
+	
 
 		
 
@@ -244,8 +250,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 
-				
 
+				
 
 
 		self.create_script_button_function()
@@ -260,6 +266,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.settings_dictionnary = {}
 		self.additionnal_settings = {}
 		self.texture_settings = {}
+		self.user_settings = {}
 
 
 		self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings = self.load_settings_function()
@@ -270,6 +277,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 		self.archive_data = {}
+		
 		if os.path.isdir(self.project_path)==True:
 			try:
 				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "rb") as read_file:
@@ -278,15 +286,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			except:
 				mc.warning("Impossible to load archive data!")
 
-			#check if the index folder exists
-			"""
-			if index doesn't exist
-				create the index
-			if the index exist
-				check the settings mirror
-					if settings mirror != settings
-						recreate the index with parsing
-			"""
+
 			try:
 				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), "r") as read_file:
 					content = json.load(read_file)
@@ -299,9 +299,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
 				self.create_pipeline_index_thread.start()
 				
-				#else:
-				#	print("Index loaded, no difference in mirrors!")
-			
+		
 			except:
 				mc.warning("Impossible to load Pipeline index!")
 
@@ -315,6 +313,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			#CREATE LISTENER
 			self.watchdog_thread = threading.Thread(target=self.watch_folder, args=(self.project_path,))
 			self.watchdog_thread.start()
+		
+
 
 		#IMPORTANTS VARIABLES
 		self.receive_notification = True
@@ -340,6 +340,9 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.default_render_nomenclature = None
 		self.root_render_folder = None
 
+
+
+		
 		self.build_pipeline_interface_function()
 
 
@@ -570,7 +573,6 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 
-
 		"""
 		INSTEAD OF DELETING FILES
 		OR IF SOME FILES ARE TOO HEAVY TO BE TRANSPORTED
@@ -594,9 +596,9 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.archive_rightcolumn = mc.columnLayout(adjustableColumn=True, parent=self.archive_rowcolumn)
 		
 		mc.separator(style="none", height=20, parent=self.archive_leftcolumn)
-		mc.button(label="Scan pipeline\nto find archives", parent=self.archive_leftcolumn)
+		#mc.button(label="Scan pipeline\nto find archives", parent=self.archive_leftcolumn)
 		mc.button(label="Tidy files in pipeline", parent=self.archive_leftcolumn, command=self.archive_tidy_files_function)
-		mc.button(label="Import files in current project", parent=self.archive_leftcolumn)
+		#mc.button(label="Import files in current project", parent=self.archive_leftcolumn)
 		mc.button(label="Generate download link\nfrom archive", parent=self.archive_leftcolumn)
 		mc.button(label="Delete archive", parent=self.archive_leftcolumn, command=self.delete_archive_function)
 
@@ -622,7 +624,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 
-
+		
 
 
 
@@ -639,45 +641,46 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		"""
 		self.render_column = mc.columnLayout(adjustableColumn=True, parent=self.tabs)
 
-		self.render_texture_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Texture linking", parent=self.render_column, collapsable=True, collapse=True)
-		self.render_texture_rowcolumn = mc.rowColumnLayout(numberOfColumns=2, columnWidth=((1, int(self.window_width/3)),(2, self.window_width*2/3)))
-		self.render_texture_column_options = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn)
-		self.render_texture_right_column = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn)
-		self.render_texture_right_rowcolumn = mc.rowColumnLayout(numberOfColumns=2, parent=self.render_texture_right_column, columnWidth=((1, self.window_width/3), (2, self.window_width/3)))
-		self.render_texture_column_names = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_right_rowcolumn)
-		self.render_texture_column_channel = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_right_rowcolumn)
-		#self.render_texture_column_result = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn)
-		self.render_texture_result_column = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_right_column)
+		self.render_texture_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Texture linking", parent=self.render_column, collapsable=True, collapse=False)
+		self.render_texture_rowcolumn = mc.rowColumnLayout(numberOfColumns=2, columnWidth=((1, self.window_width/4)), parent=self.render_texture_frame)
+		self.render_texture_leftcolumn = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn)
+		self.render_texture_rightcolumn = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn)
 
-		mc.text(label="Textures names found", parent=self.render_texture_column_names)
-		mc.text(label="Textures channel list", parent=self.render_texture_column_channel)
-		#mc.text(label="Textures files found",parent=self.render_texture_column_result)
-		self.render_texture_list_names = mc.textScrollList(numberOfRows=15, parent=self.render_texture_column_names, selectCommand=self.search_for_texture_function)
-		self.render_texture_list_channel = mc.textScrollList(numberOfRows=15, parent=self.render_texture_column_channel, allowMultiSelection=True, selectCommand=self.search_for_texture_function)
-		self.render_texture_list_result = mc.textScrollList(numberOfRows=8, parent=self.render_texture_result_column)
+		mc.text(label="Texture preset name", parent=self.render_texture_leftcolumn)
+		self.render_texture_preset_textfield = mc.textField(parent=self.render_texture_leftcolumn)
+		mc.button(label="Create texture preset", parent=self.render_texture_leftcolumn, command=self.create_texture_preset_function)
 
-		mc.separator(style="none", parent=self.render_texture_column_options, height=10)
-		self.render_texture_manual_checkbox = mc.checkBox(label="Manual connection", value=False, parent=self.render_texture_column_options, changeCommand=partial(self.render_texture_change_checkbox_function, "manual"))
-		self.render_texture_automatic_checkbox = mc.checkBox(label="Automatic connection", value=True, parent=self.render_texture_column_options, changeCommand=partial(self.render_texture_change_checkbox_function, "automatic"))
-		mc.separator(style="singleDash", parent=self.render_texture_column_options, height=20)
-		self.render_texture_limit_project = mc.checkBox(label="Limit research\nto project", changeCommand=partial(self.save_additionnal_settings_function, "none"), value=False, parent=self.render_texture_column_options)
-		self.render_texture_udim_checking = mc.checkBox(label="Check for udims", value=True, changeCommand=partial(self.save_additionnal_settings_function, "none"), parent=self.render_texture_column_options)
+		mc.separator(style="singleDash", height=15, parent=self.render_texture_leftcolumn)
 
-		mc.button(label="REFRESH", parent=self.render_texture_column_options, command=self.refresh_texture_name_function)
-		mc.button(label="Connect\nto selected", command=self.connect_texture_to_selected_shader_function, parent=self.render_texture_column_options)
+		mc.button(label="Delete texture preset", parent=self.render_texture_leftcolumn, command=self.delete_texture_preset_function)
 
-		#print(self.texture_settings)
-		#add elements in textscrolllist
-		if self.additionnal_settings != None:
-			if (self.additionnal_settings["renderEngine"] in list(self.texture_settings.keys()))==True:
-				render_settings = self.texture_settings[self.additionnal_settings["renderEngine"]]
-				channel_list = list(self.texture_settings[self.additionnal_settings["renderEngine"]].keys())
-				mc.textScrollList(self.render_texture_list_channel, edit=True, removeAll=True, append=channel_list)
+		mc.separator(style="singleDash", height=15, parent=self.render_texture_leftcolumn)
 
-			#print(self.additionnal_settings["textureFolderInProject"])
-			if (self.additionnal_settings["textureFolderInProject"] != None):
-				self.refresh_texture_name_function(None)
-				self.search_for_texture_function()
+		mc.button(label="Refresh textures", parent=self.render_texture_leftcolumn)
+
+		mc.separator(style="singleDash", height=15, parent=self.render_texture_leftcolumn)
+
+		mc.text(label="Preset list", parent=self.render_texture_leftcolumn)
+		self.render_preset_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.render_texture_leftcolumn)
+		self.render_udim_checkbox = mc.checkBox(label="Check for UDIM's", value=True, parent=self.render_texture_leftcolumn)
+		mc.button(label="Create shader from\nTexture selection", parent=self.render_texture_leftcolumn, command=self.create_shader_from_texture_function)
+
+		self.render_texture_rowcolumn2 = mc.rowColumnLayout(parent=self.render_texture_rightcolumn,numberOfColumns=2, columnWidth=((1, self.window_width*3/8), (2, self.window_width*3/8)))
+		self.render_texture_leftcolumn2 = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn2)
+		self.render_texture_rightcolumn2 = mc.columnLayout(adjustableColumn=True, parent=self.render_texture_rowcolumn2)
+
+		mc.text(label="Texture folder in project", parent=self.render_texture_leftcolumn2)
+		mc.text(label="Texture channel list", parent=self.render_texture_rightcolumn2)
+
+		self.texture_folder_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.render_texture_leftcolumn2, selectCommand=self.search_textures_function)
+		self.texture_channel_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.render_texture_rightcolumn2, allowMultiSelection=True, selectCommand=self.search_textures_function)
+		mc.text(label="Texture file found", parent=self.render_texture_rightcolumn)
+		self.texture_result_textscrolllist = mc.textScrollList(numberOfRows=8, allowMultiSelection=True, parent=self.render_texture_rightcolumn)
+
+		self.load_texture_data_funtion()
+		self.load_channel_data_function()
+		self.load_texture_in_project_function()
+		
 
 				
 
@@ -733,7 +736,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 
-
+		
 		
 
 
@@ -842,7 +845,6 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 
-
 		"""
 		self.log_column = mc.columnLayout(adjustableColumn=True, parent=self.tabs, height=self.window_height)
 		self.log_scroll = mc.scrollLayout(horizontalScrollBarThickness=16, parent=self.log_column, height=self.window_height, resizeCommand=self.resize_command_function)
@@ -864,6 +866,10 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.apply_user_settings_function()
 
 
+		self.moment9 = datetime.now()
+
+		print("Launching time : %s"%(self.moment9 - self.moment1))
+		
 		mc.showWindow()
 
 

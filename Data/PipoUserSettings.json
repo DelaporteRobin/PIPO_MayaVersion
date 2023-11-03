@@ -1,14 +1,14 @@
 {
     "dict1": {
         "index_checkbox": true,
-        "projectcontent_checkbox": true,
+        "projectcontent_checkbox": false,
         "searchbar_checkbox": false,
         "folder_checkbox": true,
         "scenes_checkbox": true,
         "items_checkbox": true,
         "textures_checkbox": false,
         "archivemenu_projectcheckbox": false,
-        "archivemenu_pipelinecheckbox": true,
+        "archivemenu_pipelinecheckbox": false,
         "render_texture_manual_checkbox": true,
         "render_texture_automatic_checkbox": false,
         "render_texture_limit_project": false,
@@ -17,7 +17,7 @@
         "export_custom_folder_checkbox": false,
         "export_assist_folder_checkbox": false,
         "export_projectassist_folder_checkbox": true,
-        "export_item_checkbox": false,
+        "export_item_checkbox": true,
         "export_edit_name_checkbox": false,
         "export_backup_publish_checkbox": true
     }

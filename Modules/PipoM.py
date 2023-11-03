@@ -67,7 +67,7 @@ class PipelineApplication:
 			return None, None, None, None, None
 		else:
 			
-			if type(self.project_path)==list:
+			if type(self.project_path)==list:	
 				self.project_path = self.project_path[0]
 			
 		
@@ -324,49 +324,26 @@ class PipelineApplication:
 		self.texture_settings = {
 
 			"Renderman": {
-
-				"diffuse": [
-					["diffuse","Diffuse", "Diff", "diff"],
-					("PxrTexture", "filename", "resultRGB"),
-					[
-						("PxrVary", "inputRGB", "resultRGB"),
-						("PxrColorCorrect", "inputRGB", "resultRGB"),
-					],
-					("PxrSurface", "diffuseColor"),
-					[
-						("PxrTexture", "linearize", 1),
-					]
-				],
-
-				"roughness": [
-					["roughness", "rough", "Roughness", "Rough"],
-					("PxrTexture", "filename", "resultRGBR"),
-					[
-						("PxrRemap", "inputRGBR", "resultRGBR"),
-					],
-					("PxrSurface", "specularRoughness"),
-					[]
-				],
-
-				"normal": [
-					["normal", "Normal"],
-					("PxrNormalMap", "filename", "resultN"),
-					[],
-					("PxrSurface", "bumpNormal"),
-					[]
-				],
-
-				"displace": [
-					["displace", "disp", "Displace", "Disp"],
-					("PxrTexture","filename", "resultRGBR"),
-					[
-						("PxrRemap", "inputRGBR", "resultRGBR"),
-						("PxrDisplace", "dispScalar", "outColor"),
-					],
-					("shadingEngine","rman__displacement"),
-					[]
-				]
-			}
+				"textureNodes": {
+					"PxrTexture":"filename",
+					"PxrNormalMap":"filename"
+				},
+				"shadingNodes": ["PxrSurface", "PxrLayerSurface", "PxrDisplace"],
+				"channelData": {
+					"DIFFUSE": {
+						"keywordList":["diffuse", "diff", "Diff", "Diffuse", "Albedo"],
+						"textureNode":"PxrTexture",
+						},
+					"ROUGHNESS": {
+						"keywordList":["roughness", "Rough", "Roughness"],
+						"textureNode":"PxrTexture",
+						},
+					"NORMAL": {
+						"keywordList":["normal", "Normal"],
+						"textureNode":"PxrNormalMap",
+						},
+				},
+			},
 
 		}
 		
@@ -412,7 +389,7 @@ class PipelineApplication:
 			"renderEngine":"Renderman",
 			"renderShaderNodeList":["lambert"],
 		}
-		self.user_settings = {
+		self.default_user_settings = {
 			"index_checkbox":True,
 			"projectcontent_checkbox":False,
 			"searchbar_checkbox":False,
@@ -441,49 +418,26 @@ class PipelineApplication:
 		self.default_texture_settings = {
 
 			"Renderman": {
-
-				"diffuse": [
-					["diffuse","Diffuse", "Diff", "diff"],
-					("PxrTexture", "filename", "resultRGB"),
-					[
-						("PxrVary", "inputRGB", "resultRGB"),
-						("PxrColorCorrect", "inputRGB", "resultRGB"),
-					],
-					("PxrSurface", "diffuseColor"),
-					[
-						("PxrTexture", "linearize", 1),
-					]
-				],
-
-				"roughness": [
-					["roughness", "rough", "Roughness", "Rough"],
-					("PxrTexture", "filename", "resultRGBR"),
-					[
-						("PxrRemap", "inputRGBR", "resultRGBR"),
-					],
-					("PxrSurface", "specularRoughness"),
-					[]
-				],
-
-				"normal": [
-					["normal", "Normal"],
-					("PxrNormalMap", "filename", "resultN"),
-					[],
-					("PxrSurface", "bumpNormal"),
-					[]
-				],
-
-				"displace": [
-					["displace", "disp", "Displace", "Disp"],
-					("PxrTexture","filename", "resultRGBR"),
-					[
-						("PxrRemap", "inputRGBR", "resultRGBR"),
-						("PxrDisplace", "dispScalar", "outColor"),
-					],
-					("shadingEngine","rman__displacement"),
-					[]
-				]
-			}
+				"textureNodes": {
+					"PxrTexture":"filename",
+					"PxrNormalMap":"filename"
+				},
+				"shadingNodes": ["PxrSurface", "PxrLayerSurface", "PxrDisplace"],
+				"channelData": {
+					"DIFFUSE": {
+						"keywordList":["diffuse", "diff", "Diff", "Diffuse", "Albedo"],
+						"textureNode":"PxrTexture",
+						},
+					"ROUGHNESS": {
+						"keywordList":["roughness", "Rough", "Roughness"],
+						"textureNode":"PxrTexture",
+						},
+					"NORMAL": {
+						"keywordList":["normal", "Normal"],
+						"textureNode":"PxrNormalMap",
+						},
+				},
+			},
 
 		}
 		
@@ -731,13 +685,17 @@ class PipelineApplication:
 						d.remove("PipelineManagerData")
 					for file in f:
 						value = self.parse_file_function(file)
+
 						
 						#print("CHECKING %s"%file)
 						if value != False:
 
+
 							filename = value["file_name"]
 							key = value["key"]
 							saved_type = value["saved_type"]
+
+
 
 
 							#split the checked filename and check if the keyword name and type are the right ones
@@ -819,6 +777,7 @@ class PipelineApplication:
 				file_pipeline_index = list(self.pipeline_index.keys())
 				for file in file_pipeline_index:
 					value, value_key, sqversion, shversion = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection, seq_selection, shot_selection)
+					#print(value, value_key, sqversion, shversion)
 
 					#print(file, value, value_key, sqversion, shversion)
 					
@@ -826,9 +785,14 @@ class PipelineApplication:
 						if (sqversion != False) and (sqversion != None):
 							if sqversion not in final_seq_list:
 								final_seq_list.append(sqversion)
+
+						if (shversion != False) and (shversion != None):
+							if shversion not in final_shot_list:
+								final_shot_list.append(shversion)
 						#check if the path of the file is in the starting path
 						file_path = self.pipeline_index[file]["path"]
 
+						#print(file, value)
 						
 						
 						display = True
@@ -990,7 +954,10 @@ class PipelineApplication:
 				type_syntax = self.settings[t][0]
 				splited_type_syntax = type_syntax.split("_")
 
+				#print(splited_type_syntax, splited_file)
+
 				if len(splited_type_syntax) != len(splited_file):
+					error=True
 					continue
 
 				#get the index of the keyword in the syntax
@@ -1001,6 +968,7 @@ class PipelineApplication:
 					return
 				
 
+				#print(splited_file[type_index], self.settings[t][1])
 				if splited_file[type_index] != self.settings[t][1]:
 					error=True 
 				else:
@@ -3418,21 +3386,21 @@ class PipelineApplication:
 		#check if archive already exist on the pipeline
 		try:
 			with open(os.path.join(project_path, "PipelineManagerData/ArchiveData.dll"), "rb") as read_file:
-				archive_data = pickle.load(read_file)
-			key_list = list(archive_data.keys())
+				self.archive_data = pickle.load(read_file)
+			key_list = list(self.archive_data.keys())
 			if (archive_name in key_list)==True:
 				mc.error("An archive with that name already exist!")
 				return
 			else:
-				archive_data[archive_name] = {
+				self.archive_data[archive_name] = {
 					"archive_path":archive_path,
 					"origin_filepath":final_file_list
 					}
 				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "wb") as save_file:
-					pickle.dump(archive_data, save_file)
+					pickle.dump(self.archive_data, save_file)
 		except:
 			#create the archive file with the new archive
-			archive_data = {
+			self.archive_data = {
 				archive_name: {
 					"archive_path":archive_path,
 					"origin_filepath":final_file_list,
@@ -3440,7 +3408,7 @@ class PipelineApplication:
 			}
 			os.makedirs(os.path.join(project_path, "PipelineManagerData"), exist_ok=True)
 			with open(os.path.join(project_path, "PipelineManagerData/ArchiveData.dll"), "wb") as save_file:
-				pickle.dump(archive_data, save_file)
+				pickle.dump(self.archive_data, save_file)
 
 		self.progress_bar = mc.progressWindow(title="Processing...", progress=0, status="Starting", min=0, max=len(final_file_list))
 		p = 0
@@ -3472,10 +3440,10 @@ class PipelineApplication:
 		print("Archive size : %s"%archive_size)
 
 		#increment the archive list dictionnary
-		self.archive_data[archive_name] = archive_path
+		#self.archive_data[archive_name] = archive_path
 
-		mc.textScrollList(self.archivemenu_textscrolllist, edit=True, removeAll=True, append=list(archive_data.keys()))
-		mc.textScrollList(self.archive_archivelist_textscrolllist, edit=True, removeAll=True, append=list(archive_data.keys()))
+		mc.textScrollList(self.archivemenu_textscrolllist, edit=True, removeAll=True, append=list(self.archive_data.keys()))
+		mc.textScrollList(self.archive_archivelist_textscrolllist, edit=True, removeAll=True, append=list(self.archive_data.keys()))
 
 
 	
@@ -3667,7 +3635,7 @@ class PipelineApplication:
 			mc.error("No project defined, Impossible to refresh archive data!")
 			return
 		self.archive_data.pop(archive_selection)
-		with open(os.path.join(project_path, "ArchiveData.dll"), "wb") as save_content:
+		with open(os.path.join(project_path, "PipelineManagerData/ArchiveData.dll"), "wb") as save_content:
 			pickle.dump(self.archive_data, save_content)
 		print("Archive data updated!")
 
@@ -3707,7 +3675,7 @@ class PipelineApplication:
 		archive_path = archive_values[archive_keys.index(archive_name_selected)]
 	
 
-		print("ARCHIVE PATH\n%s"%archive_path)
+		#print("ARCHIVE PATH\n%s"%archive_path)
 		print("Files to extract:")
 		for file in archive_content_selected:
 			print(file)
@@ -3718,15 +3686,45 @@ class PipelineApplication:
 			IF THE VALUE IS DIFFERENT FROM FALSE PUT THE FILES AT THE RIGHT LOCATION IN THE PIPELINE
 			ELSE PUT THE FILES AT THE ROOT OF THE PIPELINE
 			"""
-			if value != False:
-				#try to find the origin location in the archive data
-				origin_path = self.archive_data[archive_name_selected]["origin_filepath"]
-				print("ORIGIN FILE PATH")
-				print(origin_path)
 
+			if value != False:
+				print(self.archive_data)
+				origin_path = self.archive_data[archive_name_selected]["origin_filepath"]
+				#try to find the origin location in the archive data
+				if type(self.archive_data[archive_name_selected]) == dict:
+					#print(self.archive_data[archive_name_selected])
+					archive_path = self.archive_data[archive_name_selected]["archive_path"]
+					
+				else:
+					archive_path = self.archive_data[archive_name_selected]
+				
+				for path in origin_path:
+					#print(file, os.path.basename(path), path)
+					if os.path.basename(path) == file:
+						#extract that file at that location
+						"""
+						print("\nExtraction ready:")
+						print(file)
+						print(os.path.dirname(path))
+						print("archive path")
+						print(archive_path)
+						"""
+						if os.path.isdir(os.path.dirname(path))==False:
+							os.makedirs(os.path.dirname(path), exist_ok=True)
+						if os.path.isfile(path)==True:
+							mc.warning("File skipped, the file already exists at that location!")
+							return 
+						with zipfile.ZipFile(archive_path, mode="r") as read_archive:
+							try:	
+								read_archive.extract(file, os.path.dirname(path))
+								print("File extracted %s"%file)
+								print("New location : %s"%os.path.dirname(path))
+							except:
+								mc.warning("Impossible to extract the file at that location : %s"%file)
+							
 			else:
-				print("IMPOSSIBLE TO FIND DEFAULT FOLDER!")
-				print("\n")
+				mc.warning("Impossible to extract the file!")
+				return
 
 
 

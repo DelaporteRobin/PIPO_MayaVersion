@@ -179,6 +179,7 @@ class PipelineObserverApplication:
 
 	
 	def create_pipeline_index_function(self, project_path):
+		print("Create pipeline index!")
 	
 		self.pipeline_index = {}
 
