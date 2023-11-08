@@ -278,6 +278,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 		self.archive_data = {}
 		
+
 		if os.path.isdir(self.project_path)==True:
 			try:
 				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "rb") as read_file:
@@ -286,26 +287,44 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			except:
 				mc.warning("Impossible to load archive data!")
 
-
 			try:
-				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), "r") as read_file:
+				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), 'r') as read_file:
 					content = json.load(read_file)
-
 				self.settings_mirror = content["mirrorSettings"]
 				self.settings_dictionnary_mirror = content["mirrorSettingsDictionnary"]
 				self.pipeline_index = content["pipelineIndex"]
 
-				#if (self.settings != self.settings_mirror) or (self.settings_dictionnary_mirror != self.settings_dictionnary):
 				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
 				self.create_pipeline_index_thread.start()
-				
-		
 			except:
-				mc.warning("Impossible to load Pipeline index!")
+				self.settings_mirror = {}
+				self.settings_dictionnary_mirror = {}
+				self.pipeline_index = {}
 
-				#launch pipeline index
 				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
 				self.create_pipeline_index_thread.start()
+			#self.create_pipeline_index_function(self.project_path)
+			"""
+			try:
+				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), "r") as read_file:
+					content = json.load(read_file)
+				self.settings_mirror = content["mirrorSettings"]
+				self.settings_dictionnary_mirror = content["mirrorSettingsDictionnary"]
+				self.pipeline_index = content["pipelineIndex"]
+
+				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
+				self.create_pipeline_index_thread.start()
+			except:
+				mc.warning("Impossible to launch Pipeline index!")
+
+				self.pipeline_index = {}
+				self.settings_mirror = {}
+				self.settings_dictionnary_mirror = {}
+				
+				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
+				self.create_pipeline_index_thread.start()
+			"""
+		
 
 
 
@@ -679,7 +698,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 		self.load_texture_data_funtion()
 		self.load_channel_data_function()
-		self.load_texture_in_project_function()
+		#self.load_texture_in_project_function()
 		
 
 				

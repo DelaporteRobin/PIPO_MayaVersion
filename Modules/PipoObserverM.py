@@ -12,6 +12,8 @@ import pymel.core as pm
 import json
 import pickle
 import sys
+import scandir
+import queue
 
 from watchdog.observers import Observer 
 from watchdog.events import FileSystemEventHandler
@@ -177,13 +179,101 @@ class PipelineObserverApplication:
 		observer.join()
 
 
+	def process_file(self, file_queue):
+		
+		while True:
+			file_path = file_queue.get()
+			if file_path != None:
+				path = os.path.dirname(file_path)
+				filename, extension = os.path.splitext(os.path.basename(file_path))
+				
+					
+				if os.path.basename(file_path) in self.pipeline_index:
+					#check the path in the pipeline
+					if os.path.isfile(self.pipeline_index[os.path.basename(file_path)]["fullpath"])==False:
+						self.pipeline_index[os.path.basename(file_path)] = {
+							"path":(r""+path).replace("\\", "/").replace(os.sep, "/"),
+							"fullpath": (r""+os.path.join(path, filename)).replace("\\", "/").replace(os.sep, "/"),
+							"filename":filename,
+						}
+				else:
+					#launch parsing
+					
+					value = self.parse_file_function(os.path.basename(file_path))
+					if value != False:
+					
+						self.pipeline_index[os.path.basename(file_path)] = {
+							"path":(r""+path).replace("\\", "/").replace(os.sep, "/"),
+							"fullpath": (r""+os.path.join(path, filename)).replace("\\", "/").replace(os.sep, "/"),
+							"filename":filename,
+						}
+					
+						
+
+					with self.lock:
+						if file_path not in self.processed_files:
+							self.processed_files.add(file_path)
+					
+			
+			file_queue.task_done()
+
+
+
 	
 	def create_pipeline_index_function(self, project_path):
-		print("Create pipeline index!")
+		print("\nStarting creation of Pipeline index : ")
 	
-		self.pipeline_index = {}
+		#self.pipeline_index = {}
+	
+		
+		#self.already_checked_file = []
+		full_size = 0
+		"""
+		for root,_,files in scandir.walk(project_path):
+			full_size += len(files)
+		"""
+		file_queue = queue.Queue()
+		self.lock = threading.Lock()
+		self.processed_files = set()
+		
+		
+		for root, folders, files in scandir.walk(project_path):
+			for file in files:
+				file_path = os.path.join(root, file)
+				file_queue.put(file_path)
 
-		#try:
+		size = file_queue.qsize()
+		print("Number of files to check : %s\n"%size)
+		
+		
+		num_thread = 4
+		threads = []
+		self.start_thread_moment = datetime.now()
+
+		self.start_index_moment = datetime.now()
+
+		for i in range(num_thread):
+			print("STARTING THREAD! =====================================================\n")
+			thread = threading.Thread(target=self.process_file, args=(file_queue,))
+			thread.start()
+			threads.append(thread)
+
+		"""
+		for thread in threads:
+			file_queue.put(None)
+		for thread in threads:
+			thread.join()
+		"""
+
+
+		self.end_index_moment = datetime.now()
+
+		print("\nDone searching in %s"%project_path)
+		print("Delta : %s"%(self.end_index_moment - self.start_index_moment))
+		self.save_pipeline_index_function()
+			
+		"""
+		#FIRST VERSION OF INDEX CREATION SYSTEM
 		for root, dirs, files in os.walk(project_path):
 			
 			
@@ -204,15 +294,10 @@ class PipelineObserverApplication:
 						"fullpath": (r""+os.path.join(root, f)).replace("\\", "/").replace(os.sep, "/"),
 						"filename":filename,
 						}
-		self.save_pipeline_index_function()	
-
-		print("Done searching in %s"%project_path)
 		"""
-		except:
-			mc.error("Impossible to create pipeline index!")
-			return
-
-		"""
+		
+		
+	
 		
 		
 
@@ -232,7 +317,7 @@ class PipelineObserverApplication:
 		try:
 			with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), 'w') as save_file:
 				save_file.write(json.dumps(json_dictionnary, indent=4))
-			print("Pipeline index saved successfully!")
+			#print("Pipeline index saved successfully!")
 			return
 		except:
 			mc.error("Impossible to save Pipeline index in Pipeline!")

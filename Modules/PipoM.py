@@ -2378,10 +2378,10 @@ class PipelineApplication:
 			"archivemenu_projectcheckbox":mc.checkBox(self.archivemenu_projectcheckbox, query=True, value=True),
 			"archivemenu_pipelinecheckbox":mc.checkBox(self.archivemenu_pipelinecheckbox, query=True, value=True),
 
-			"render_texture_manual_checkbox":mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True),
-			"render_texture_automatic_checkbox":mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True),
-			"render_texture_limit_project":mc.checkBox(self.render_texture_limit_project, query=True, value=True),
-			"render_texture_udim_checking":mc.checkBox(self.render_texture_udim_checking, query=True, value=True),
+			#"render_texture_manual_checkbox":mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True),
+			#"render_texture_automatic_checkbox":mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True),
+			#"render_texture_limit_project":mc.checkBox(self.render_texture_limit_project, query=True, value=True),
+			#"render_texture_udim_checking":mc.checkBox(self.render_texture_udim_checking, query=True, value=True),
 
 			"export_current_folder_checkbox":mc.checkBox(self.export_current_folder_checkbox, query=True, value=True),
 			"export_custom_folder_checkbox":mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True),
@@ -2850,18 +2850,17 @@ class PipelineApplication:
 			if (len(selection))==0:
 				mc.error("No item selected to export!")
 				return
-			try:
-				os.makedirs(filepath, exist_ok=True)
-				mc.file(final_path,force=True, shader=True, pr=True, es=True, type=extension)
-				mc.warning("Selection exported successfully!")
-
-				if self.user_settings["ExportRaimbow"]==True:
-					self.print_color_for_publish_function()
-				print(final_path)
-				return
-			except:
-				mc.error("Impossible to export selection!")
-				return
+			
+			os.makedirs(filepath, exist_ok=True)
+			mc.file(final_path,force=True, shader=True, pr=True, es=True, type=extension)
+			mc.warning("Selection exported successfully!")
+			"""
+			if self.user_settings["ExportRaimbow"]==True:
+				self.print_color_for_publish_function()
+			"""
+			print(final_path)
+			return
+			
 
 
 	def save_note_function(self, event):
@@ -3806,10 +3805,11 @@ class PipelineApplication:
 							name_index = (setting_content[0].split("_")).index("[name]")
 							name_in_filename = splited_file[name_index]
 						except:
-							mc.error("Impossible to get name in the actual file!")
-							return
-						print("\nScene name found in filename!")
-						mc.textField(self.export_edit_name_textfield, edit=True, text=name_in_filename)
+							mc.warning("Impossible to get name in the actual file!")
+						
+						else:
+							print("\nScene name found in filename!")
+							mc.textField(self.export_edit_name_textfield, edit=True, text=name_in_filename)
 
 
 

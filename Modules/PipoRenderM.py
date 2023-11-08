@@ -593,11 +593,17 @@ class PipelineRenderApplication:
 		if x not in self.node_list:
 			attribute_dictionnary = {}
 			for attr in mc.listAttr(x, se=True):
-				#print(attr)
-				try:
-					attribute_dictionnary[attr] = mc.getAttr("%s.%s"%(x, attr))
+
+				try:	
+					try:
+						attribute_dictionnary[attr] = mc.getAttr("%s.%s"%(x, attr), type="string")
+						
+					except:
+						attribute_dictionnary[attr] = mc.getAttr("%s.%s"%(x,attr))
 				except:
-					pass
+					mc.warning("Impossible to save attribute [%s] for the node %s"%(attr, x))
+				#print(attr)
+				
 			#print(mc.nodeType(x))
 			#check if the name of the node is corresponding to a channel name
 			#check if the type of the node is the same that the texture node for that channel
@@ -655,26 +661,29 @@ class PipelineRenderApplication:
 		#get project path
 		current_project_path = mc.workspace(query=True, active=True)
 		if os.path.isdir(current_project_path)==False:
-			mc.error("You have to set a project before!")
+			mc.warning("You have to set a project before!")
 			return
-		#get texture folder in project
-		texture_folder_in_project = self.additionnal_settings["textureFolderInProject"]
 
-		#go through the folders
-		for root, dirs, files in scandir.walk(current_project_path):
-			for d in dirs:
-				if d == texture_folder_in_project:
-					contenu = os.listdir(os.path.join(root, d))
 
-					# Filtrer les dossiers parmi le contenu
-					noms_de_dossiers = [element for element in contenu if os.path.isdir(os.path.join(os.path.join(root, d), element))]
+		else:
+			#get texture folder in project
+			texture_folder_in_project = self.additionnal_settings["textureFolderInProject"]
 
-					# Affichez la liste des noms de dossiers
-					try:
-						mc.textScrollList(self.texture_folder_textscrolllist, edit=True, removeAll=True, append=noms_de_dossiers)
-					except:
-						mc.error("Impossible to refresh texture folder list!")
-						return
+			#go through the folders
+			for root, dirs, files in scandir.walk(current_project_path):
+				for d in dirs:
+					if d == texture_folder_in_project:
+						contenu = os.listdir(os.path.join(root, d))
+
+						# Filtrer les dossiers parmi le contenu
+						noms_de_dossiers = [element for element in contenu if os.path.isdir(os.path.join(os.path.join(root, d), element))]
+
+						# Affichez la liste des noms de dossiers
+						try:
+							mc.textScrollList(self.texture_folder_textscrolllist, edit=True, removeAll=True, append=noms_de_dossiers)
+						except:
+							mc.error("Impossible to refresh texture folder list!")
+							return
 
 
 
@@ -797,6 +806,7 @@ class PipelineRenderApplication:
 		node_name_list = list(self.node_list.keys())
 
 		for node in node_name_list:
+			print("\n%s"%node)
 			#print(node)
 			#print("create %s"%node)
 
@@ -810,7 +820,24 @@ class PipelineRenderApplication:
 			else:
 				new_node = mc.shadingNode(self.node_list[node]["nodeType"], asTexture=True)
 
-			
+
+
+			#set the attributes for that node
+			attribute_dictionnary = self.node_list[node]["nodeAttributes"]
+			for attr, attr_value in attribute_dictionnary.items():
+				#print(attr, attr_value, node)
+				try:
+					try:
+						mc.setAttr("%s.%s"%(new_node, attr), attr_value, type="string")
+					except:
+						mc.setAttr("%s.%s"%(new_node, attr), attr_value)
+				except:
+					mc.warning("Impossible to set attribute [%s] for the node %s"%(attr, new_node))
+
+
+
+
+				
 			#check that the node created got the same channel
 			#check that this node is from the right type for that channel
 			#print(self.node_list[node]["nodeTextureChannel"], channel_selection)
@@ -889,7 +916,7 @@ class PipelineRenderApplication:
 				"node_texture":self.node_list[node]["nodeTextureChannel"],
 				"node_identifier":mc.ls(new_node, uuid=True)[0],
 			}
-
+		
 		for connexion in self.connexion_list:
 			origin_node, origin_attr = connexion[0].split(".")
 			destination_node, destination_attr = connexion[1].split(".")
@@ -903,12 +930,7 @@ class PipelineRenderApplication:
 				mc.connectAttr(origin_connection, destination_connection, f=True)
 			except:
 				pass
-		"""
-		for texture in texture_selection:
-			full_texture_path = os.path.join(self.texture_list[texture][0], texture)
-			channel_for_texture = self.texture_list[texture][1]
-			print(channel_for_texture, full_texture_path)
-		"""
+		
 
 
 
