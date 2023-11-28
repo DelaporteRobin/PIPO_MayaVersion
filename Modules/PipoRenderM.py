@@ -657,7 +657,7 @@ class PipelineRenderApplication:
 		mc.textScrollList(self.texture_channel_textscrolllist, edit=True, removeAll=True, append=channel_list)
 
 
-	def load_texture_in_project_function(self):
+	def load_texture_in_project_function(self, event):
 		#get project path
 		current_project_path = mc.workspace(query=True, active=True)
 		if os.path.isdir(current_project_path)==False:
@@ -781,6 +781,8 @@ class PipelineRenderApplication:
 		texture_selection = mc.textScrollList(self.texture_result_textscrolllist, query=True, si=True)
 		channel_selection = mc.textScrollList(self.texture_channel_textscrolllist, query=True, si=True)
 		preset_selection = mc.textScrollList(self.render_preset_textscrolllist, query=True, si=True)
+		node_selection = mc.ls(sl=True)
+
 
 		if (texture_selection == None) or (channel_selection == None):
 			mc.error("You have to select textures and at least one channel!")
@@ -804,6 +806,12 @@ class PipelineRenderApplication:
 		#loop of node creation
 		self.identifier_dictionnary = {}
 		node_name_list = list(self.node_list.keys())
+		self.replace_dictionnary = {}
+
+
+
+
+
 
 		for node in node_name_list:
 			print("\n%s"%node)
@@ -814,101 +822,114 @@ class PipelineRenderApplication:
 			during the creation of the node, check if the node is linked to a channel
 			if yes connect a texture of the same channel and after remove that texture from the texture to connect list
 			"""
+			
+			error=False
+			for node_selected in node_selection:
+				if mc.nodeType(node_selected) == self.node_list[node]["nodeType"]:
+					#replace the old node by the new one in the texture preset dictionnary
+					print("REPLACE A NODE IN DICTIONNARY")
+					error=True
+					print()
+					self.replace_dictionnary[node] = node_selected
 
-			if self.node_list[node]["nodeType"] in self.texture_settings[self.additionnal_settings["renderEngine"]]["shadingNodes"]:
-				new_node = mc.shadingNode(self.node_list[node]["nodeType"], asShader=True)
-			else:
-				new_node = mc.shadingNode(self.node_list[node]["nodeType"], asTexture=True)
-
-
-
-			#set the attributes for that node
-			attribute_dictionnary = self.node_list[node]["nodeAttributes"]
-			for attr, attr_value in attribute_dictionnary.items():
-				#print(attr, attr_value, node)
-				try:
-					try:
-						mc.setAttr("%s.%s"%(new_node, attr), attr_value, type="string")
-					except:
-						mc.setAttr("%s.%s"%(new_node, attr), attr_value)
-				except:
-					mc.warning("Impossible to set attribute [%s] for the node %s"%(attr, new_node))
-
-
-
-
+			if error!=True:
 				
-			#check that the node created got the same channel
-			#check that this node is from the right type for that channel
-			#print(self.node_list[node]["nodeTextureChannel"], channel_selection)
-			#print(node, self.node_list[node]["nodeTextureChannel"], channel_selection)
-			checked = False
-			for channel in channel_selection:
-				#print(str(self.node_list[node]["nodeTextureChannel"]), channel, str(self.node_list[node]["nodeTextureChannel"]) in channel)
-				if (channel) in str(self.node_list[node]["nodeTextureChannel"]):
-					checked=True 
+				if self.node_list[node]["nodeType"] in self.texture_settings[self.additionnal_settings["renderEngine"]]["shadingNodes"]:
+					new_node = mc.shadingNode(self.node_list[node]["nodeType"], asShader=True)
+				else:
+					new_node = mc.shadingNode(self.node_list[node]["nodeType"], asTexture=True)
 
-			if checked==True:
-				print('CHECKED')
-				#go through the list of textures and connect one that is matching
-				node_setting_type = self.texture_settings[self.additionnal_settings["renderEngine"]]["channelData"][self.node_list[node]["nodeTextureChannel"]]["textureNode"]
-				#print("setting", node_setting_type, self.node_list[node]["nodeType"])
 
-				if node_setting_type == self.node_list[node]["nodeType"]:
+
+				#set the attributes for that node
+				attribute_dictionnary = self.node_list[node]["nodeAttributes"]
+				for attr, attr_value in attribute_dictionnary.items():
+					#print(attr, attr_value, node)
 					try:
-						for texture_name, texture_data in self.texture_list.items():
-							print("CHECKING %s, %s"%(texture_name, texture_data))
-							if texture_name in texture_selection:
+						try:
+							mc.setAttr("%s.%s"%(new_node, attr), attr_value, type="string")
+						except:
+							mc.setAttr("%s.%s"%(new_node, attr), attr_value)
+					except:
+						mc.warning("Impossible to set attribute [%s] for the node %s"%(attr, new_node))
 
-								if self.node_list[node]["nodeTextureChannel"] == texture_data[1]:
-									
-									attribute_for_texture = self.texture_settings[self.additionnal_settings["renderEngine"]]["textureNodes"][node_setting_type]
 
-									#check the name of the texture and replace udims number by udims codes
-									filename, extension = os.path.splitext(texture_name)
 
-									#split the filename by dots
-									splited_filename_dots = filename.split(".")
-									splited_filename_underscore = filename.split("_")
 
-									if mc.checkBox(self.render_udim_checkbox,query=True, value=True)==True:
-										#try to find <UDIM>
-										if len(splited_filename_dots) > 1:
-											for i in range(1, len(splited_filename_dots)):
+					
+				#check that the node created got the same channel
+				#check that this node is from the right type for that channel
+				#print(self.node_list[node]["nodeTextureChannel"], channel_selection)
+				#print(node, self.node_list[node]["nodeTextureChannel"], channel_selection)
+				checked = False
+				for channel in channel_selection:
+					#print(str(self.node_list[node]["nodeTextureChannel"]), channel, str(self.node_list[node]["nodeTextureChannel"]) in channel)
+					if (channel) in str(self.node_list[node]["nodeTextureChannel"]):
+						checked=True 
 
-												
-												if splited_filename_dots[i].isdigit() == True:
-													print("UDIM POTENTIALLY DETECTED!")
-													#change the filename and replace the udim index by the undim code
-													splited_filename_dots[i] = "<UDIM>"
+				if checked==True:
+					print('CHECKED')
+					#go through the list of textures and connect one that is matching
+					node_setting_type = self.texture_settings[self.additionnal_settings["renderEngine"]]["channelData"][self.node_list[node]["nodeTextureChannel"]]["textureNode"]
+					#print("setting", node_setting_type, self.node_list[node]["nodeType"])
+
+					if node_setting_type == self.node_list[node]["nodeType"]:
+						try:
+							for texture_name, texture_data in self.texture_list.items():
+								#print("CHECKING %s, %s"%(texture_name, texture_data))
+								if texture_name in texture_selection:
+
+									if self.node_list[node]["nodeTextureChannel"] == texture_data[1]:
+										
+										attribute_for_texture = self.texture_settings[self.additionnal_settings["renderEngine"]]["textureNodes"][node_setting_type]
+
+										#check the name of the texture and replace udims number by udims codes
+										filename, extension = os.path.splitext(texture_name)
+
+										#split the filename by dots
+										splited_filename_dots = filename.split(".")
+										splited_filename_underscore = filename.split("_")
+
+										if mc.checkBox(self.render_udim_checkbox,query=True, value=True)==True:
+											#try to find <UDIM>
+											if len(splited_filename_dots) > 1:
+												for i in range(1, len(splited_filename_dots)):
+
+													
+													if splited_filename_dots[i].isdigit() == True:
+														#print("UDIM POTENTIALLY DETECTED!")
+														#change the filename and replace the udim index by the undim code
+														splited_filename_dots[i] = "<UDIM>"
+														udim = True
+
+														texture_name = ".".join(splited_filename_dots) + extension
+														#print(texture_name)
+														break
+											
+											if len(splited_filename_underscore) >=3 :
+												u_value = splited_filename_underscore[-2]
+												v_value = splited_filename_underscore[-1]
+
+												if (u_value.split("u")[0] == "") and (u_value[1].isdigit()==True) and (v_value.split("v")[0] == "") and (v_value[1].isdigit()==True):
+													splited_filename_underscore[-2] = "u<u>"
+													splited_filename_underscore[-1] = "v<v>"
+													#origin_filename = file_selection[y]
+													texture_name = "_".join(splited_filename_underscore) + extension
+													#print("UDIM POTENTIALLY DETECTED")
+													#print(texture_name)
 													udim = True
 
-													texture_name = ".".join(splited_filename_dots) + extension
-													#print(texture_name)
-													break
 										
-										if len(splited_filename_underscore) >=3 :
-											u_value = splited_filename_underscore[-2]
-											v_value = splited_filename_underscore[-1]
 
-											if (u_value.split("u")[0] == "") and (u_value[1].isdigit()==True) and (v_value.split("v")[0] == "") and (v_value[1].isdigit()==True):
-												splited_filename_underscore[-2] = "u<u>"
-												splited_filename_underscore[-1] = "v<v>"
-												#origin_filename = file_selection[y]
-												texture_name = "_".join(splited_filename_underscore) + extension
-												#print("UDIM POTENTIALLY DETECTED")
-												#print(texture_name)
-												udim = True
+										print("\nCONNECTING TEXTURE\n%s"%texture_name)
+										mc.setAttr("%s.%s"%(new_node,attribute_for_texture), os.path.join(texture_data[0], texture_name), type="string")
+										self.texture_list.pop(texture_name)
+						except:
+							pass
 
-									
+			else:
+				new_node = node_selected
 
-									print("\nCONNECTING TEXTURE\n%s"%texture_name)
-									mc.setAttr("%s.%s"%(new_node,attribute_for_texture), os.path.join(texture_data[0], texture_name), type="string")
-									self.texture_list.pop(texture_name)
-					except:
-						pass
-
-		
 
 			self.identifier_dictionnary[node] = {
 				"node_name":new_node, 
@@ -916,20 +937,37 @@ class PipelineRenderApplication:
 				"node_texture":self.node_list[node]["nodeTextureChannel"],
 				"node_identifier":mc.ls(new_node, uuid=True)[0],
 			}
+			
+
+
+		for key, value in self.identifier_dictionnary.items():
+			if key in self.replace_dictionnary:
+				value["node_name"] = self.replace_dictionnary[key]
+				self.identifier_dictionnary[key] = value
+
 		
+
+		for key, value in self.identifier_dictionnary.items():
+			print(key, value)
+
+		#print(self.replace_dictionnary)
+	
+	
 		for connexion in self.connexion_list:
 			origin_node, origin_attr = connexion[0].split(".")
 			destination_node, destination_attr = connexion[1].split(".")
 
-			origin_connection = "%s.%s"%(self.identifier_dictionnary[origin_node]["node_name"],origin_attr)
-			destination_connection = "%s.%s"%(self.identifier_dictionnary[destination_node]["node_name"], destination_attr)
+			
 
 
 			#print(origin_connection, destination_connection)
 			try:
+				origin_connection = "%s.%s"%(self.identifier_dictionnary[origin_node]["node_name"],origin_attr)
+				destination_connection = "%s.%s"%(self.identifier_dictionnary[destination_node]["node_name"], destination_attr)
 				mc.connectAttr(origin_connection, destination_connection, f=True)
 			except:
-				pass
+				print("connexion %s %s failed"%(origin_connection, destination_connection))
+		
 		
 
 

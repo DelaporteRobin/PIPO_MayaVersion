@@ -222,6 +222,7 @@ class PipelineObserverApplication:
 	
 	def create_pipeline_index_function(self, project_path):
 		print("\nStarting creation of Pipeline index : ")
+		print("Pipeline index creation in progress ...")
 	
 		#self.pipeline_index = {}
 	
@@ -238,32 +239,40 @@ class PipelineObserverApplication:
 		
 		
 		for root, folders, files in scandir.walk(project_path):
-			for file in files:
-				file_path = os.path.join(root, file)
-				file_queue.put(file_path)
+			if os.path.basename(root) not in self.additionnal_settings["dodgeList"]:
+				for file in files:
+					filename, extension = os.path.splitext(file)
+					if (extension in self.additionnal_settings["3dSceneExtension"]) or (extension in self.additionnal_settings["3dItemExtension"]):
+						file_path = os.path.join(root, file)
+						file_queue.put(file_path)
+	
 
 		size = file_queue.qsize()
+
 		print("Number of files to check : %s\n"%size)
+
 		
 		
 		num_thread = 4
 		threads = []
+		#self.semaphore = threading.Semaphore(num_thread)
 		self.start_thread_moment = datetime.now()
 
 		self.start_index_moment = datetime.now()
 
 		for i in range(num_thread):
+			#self.semaphore.acquire()
 			print("STARTING THREAD! =====================================================\n")
 			thread = threading.Thread(target=self.process_file, args=(file_queue,))
 			thread.start()
 			threads.append(thread)
 
-		"""
+		
 		for thread in threads:
 			file_queue.put(None)
 		for thread in threads:
 			thread.join()
-		"""
+		
 
 
 		self.end_index_moment = datetime.now()

@@ -675,7 +675,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 		mc.separator(style="singleDash", height=15, parent=self.render_texture_leftcolumn)
 
-		mc.button(label="Refresh textures", parent=self.render_texture_leftcolumn)
+		mc.button(label="Refresh textures", parent=self.render_texture_leftcolumn, command=self.load_texture_in_project_function)
 
 		mc.separator(style="singleDash", height=15, parent=self.render_texture_leftcolumn)
 
@@ -844,7 +844,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		#self.export_publish_keepname_checkbox = mc.checkBox(label="Keep item name", parent=self.export_leftcolumn)
 		mc.button(label="Publish selected", parent=self.export_publish_frame,command=partial(self.export_publish_function, "selection"))
 
-
+		self.export_shader_checkbox = mc.checkBox(value=True, parent=self.export_leftcolumn, label="Export with shader")
 
 		#textscrolllist of export window
 		self.export_right_rowcolumn = mc.rowColumnLayout(numberOfColumns=2, columnWidth=((1, self.window_width*(2/6)), (2, self.window_width*(2/6))), parent=self.export_rightcolumn)

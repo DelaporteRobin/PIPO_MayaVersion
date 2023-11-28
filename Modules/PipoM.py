@@ -73,7 +73,7 @@ class PipelineApplication:
 		
 		
 		
-			try:	
+			try:
 				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineSettings.json"), "r") as read_file:
 					load_data = json.load(read_file)
 				with open(os.path.join(self.program_folder, "Data/PipoUserSettings.json"), "r") as read_file:
@@ -91,6 +91,8 @@ class PipelineApplication:
 			except:
 				self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings = self.create_pipeline_settings_function()
 				print("Settings file created in your project!")
+			
+			
 				
 		return self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings
 
@@ -266,13 +268,14 @@ class PipelineApplication:
 			"prop":["[project]_[key]_[name]_[type]", "prop", None],
 			"set":["[project]_[key]_[name]_[type]", "set", None],
 			"fx":["[project]_[key]_[name]_[type]","fx", None],
-			"shots":["[project]_[key]_[sqversion]_[shversion]", "shots", None]
+			"shots":["[project]_[key]_[sqversion]_[shversion]", "shots", {"folder1":"folder1", "folder2":"folder2"},]
 		}
 		self.additionnal_settings = {
 			#"checkboxValues":[False, False, True, False, False, False],
 			"3dSceneExtension":[".ma",".mb"],
 			"3dItemExtension":[".obj", ".fbx"],
 			"texturesExtension":[".png", ".tif",".tiff",".tex", ".exr", ".jpg"],
+			"dodgeList":["RND"],
 			"mayaProjectName":"maya",
 			"editPublishFolder":["edit", "publish"],
 			"renderFolderInProject":"images",
@@ -360,7 +363,7 @@ class PipelineApplication:
 			"prop":["[project]_[key]_[name]_[type]", "prop", None],
 			"set":["[project]_[key]_[name]_[type]", "set", None,],
 			"fx":["[project]_[key]_[name]_[type]","fx", None,],
-			"shots":["[project]_[key]_[sqversion]_[shversion]", "shots", None,]
+			"shots":["[project]_[key]_[sqversion]_[shversion]", "shots", {"folder1":"folder1", "folder2":"folder2"},]
 		}
 		basic_file_type_list = ["mod", "rig", "groom", "cloth", "lookdev", "layout", "camera", "anim", "render", "compositing"]
 
@@ -379,6 +382,7 @@ class PipelineApplication:
 			"3dSceneExtension":[".ma",".mb"],
 			"3dItemExtension":[".obj"],
 			"texturesExtension":[".png", ".tif",".tiff",".tex", ".exr", ".jpg"],
+			"dodgeList":["RND"],
 			"mayaProjectName":"maya",
 			"editPublishFolder":["edit", "publish"],
 			"renderFolderInProject":"images",
@@ -1407,109 +1411,11 @@ class PipelineApplication:
 				mc.warning("Item renamed successfully!")
 				return
 
-	def export_edit_file_function(self, event):
-		"""
-		create the full filename from syntax settings
-		"""
-		final_syntax = []
-		if mc.textScrollList(self.export_edit_kind_textscrolllist, query=True, si=True)==None:
-			mc.error("You have to select a type!")
-			return
-
-		for kind, content in self.settings.items():
-			if kind == mc.textScrollList(self.export_edit_kind_textscrolllist, query=True, si=True)[0]:
-				syntax = content[0].split("_")
-
-				for element in syntax:
-					if element == "[project]":
-						final_syntax.append(os.path.basename(os.path.normpath(mc.workspace(query=True, active=True))))
-					if element == "[key]":
-						final_syntax.append(content[1])
-					if element == "[artist]":
-						#get the content of artist textfield
-						artist_name = mc.textField(self.export_artist_name_textfield, query=True, text=True)
-						if (self.letter_verification_function(artist_name)) != True:
-							mc.error("You have to enter a valid artist name!")
-							return
-						else:
-							final_syntax.append(artist_name)
-					if element == "[name]":
-						name = mc.textField(self.export_edit_name_textfield, query=True, text=True)
-						if (self.letter_verification_function(name)==False) or (self.letter_verification_function(name)==None):
-							mc.error("You have to define a name for the new file!")
-							return
-						else:
-							final_syntax.append(name)
-					if element == "[type]":
-						type_selection = mc.textScrollList(self.export_edit_type_textscrolllist, query=True,si=True)
-						if type_selection == None:
-							mc.error("You have to select a type!")
-							return
-						else:
-							final_syntax.append(type_selection[0])
-					if (element == "[version]") or (element == "[shversion]") or (element == "[sqversion]"):
-						if element == "[version]":
-							version = list(str(mc.intField(self.export_edit_fileversion, query=True, value=True)))
-						if element == "[shversion]":
-							version = list(str(mc.intField(self.export_edit_shotversion, query=True, value=True)))
-						if element == "[sqversion]":
-							version = list(str(mc.intField(self.export_edit_sqversion, query=True, value=True)))
-						if len(version)<3:
-							while len(version) < 3:
-								version.insert(0,"0")
-						final_syntax.append("v"+"".join(version))
-					
-
-		final_filename = "_".join(final_syntax)
-		#check if we need to find the default folder
-		if mc.checkBox(self.export_edit_defaultfolder_checkbox, query=True, value=True)==True:
-			
-			for kind, content in self.settings.items():
-			
-				if kind == mc.textScrollList(self.export_edit_kind_textscrolllist, query=True, si=True)[0]:
-					default_folder = content[2]
 	
-					if (default_folder == None) or (default_folder == "None"):
-						mc.error("Impossible to use default folder You need to define on in settings!")
-						return
-					else:
-						final_filename = os.path.join(default_folder, final_filename+".ma")
-		
-			
-
-		else:
-			try:
-				folder = mc.fileDialog2(fm=3)[0]
-			except:
-				mc.error("You have to select a destination folder!")
-				return
-			else:
-				final_filename = os.path.join(folder, final_filename+".ma")
 
 
-		
-		#save the current file
-		#rename the current file
-		#save the renamed 
-		confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
-		if confirm_saving == "No":
-			return
-		if os.path.isfile(final_filename)==False:
-			try:
-				mc.file(save=True)
-			except:
-				mc.warning("Impossible to save the current file\nNo name defined for it!")
-				pass
-			mc.file(rename=final_filename)
-			mc.file(save=True, f=True, type="mayaAscii")
 
-			mc.warning("EDIT FILE SUCCESFULLY SAVED\n[%s]"%final_filename)
-			self.take_picture_function("test")
-			self.add_log_content_function("Export edit file succeed [%s]"%final_filename)
-		else:
-			self.add_log_content_function("Export edit file failed, the file already exist")
-			mc.error("This file already exist!")
-			return
+
 
 
 	def open_website_for_edit_function(self):
@@ -1662,200 +1568,6 @@ class PipelineApplication:
 
 
 
-
-		
-
-
-	def export_publish_function(self, event):
-		#get current project path
-		project_path = mc.workspace(query=True, active=True)
-		project_name = os.path.basename(project_path)
-		current_scene_path = (mc.file(query=True, sn=True))
-		"""
-		save the current file as it is
-		check all elements of the publish step list
-		save the current file as the new publish file
-
-		save the current file in the current project folder
-		search for the pulbish folder
-		"""
-
-		"""
-		try:
-			mc.file(save=True)
-		except:
-			mc.error("Impossible to save the current file!")
-			return
-		"""
-		selection = mc.textScrollList(self.export_publish_textscrolllist, query=True, si=True)
-
-		if type(selection)==list:
-			for item in selection:
-
-				#DELETE UNUSED NODES
-				if item == self.publish_step_list[0]:
-					#delete unused nodes
-					mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1, "deleteUnusedNodes");')
-					mc.warning("Unused nodes deleted")
-
-
-				#HIDE JOINTS
-				if item == self.publish_step_list[1]:
-					#hide all joints
-					#display override in ref mode
-					select_all = mc.select(all=True)
-					selection = mc.ls(sl=True)
-					final_selection = []
-
-					for item in selection:
-						final_selection.append(item)
-
-						if mc.listRelatives(item, allDescendents=True) != None:
-							final_selection += mc.listRelatives(item, allDescendents=True)
-					
-					joint_list = []
-					for item in final_selection:
-						if mc.objectType(item) == "joint":
-							joint_list.append(item)
-					
-					for joint in joint_list:
-						mc.setAttr("%s.overrideEnabled"%joint,1)
-						mc.setAttr("%s.overrideDisplayType"%joint,2)
-					mc.select(all=True, deselect=True)
-
-					mc.warning("All controllers hidden")
-
-
-				#REMOVE ALL ANIMATIONS KEYS
-				if item == self.publish_step_list[2]:
-					#select all nurbs curve and remove all keys on them
-					print("hello world!")
-
-		#check the nomenclature of the current file to define the right publish nomenclature
-		#get checkbox values
-		if mc.checkBox(self.export_publish_samelocation_checkbox, query=True, value=True)==True:
-			#get current location of the file your working on
-			publish_path = os.path.dirname(mc.file(query=True, sn=True))
-			if os.path.dirname(publish_path)==False:
-				mc.error("Impossible to export, no location existing!")
-				return
-			#change the nomenclature of the current file
-			extension = os.path.splitext(current_scene_path)[1]
-			splited_name = os.path.basename(os.path.splitext(current_scene_path)[0]).split("_")
-			version_present=False
-			for i in range(0, len(splited_name)):
-				if list(splited_name[i])[0] == "v":
-					#print(splited_name[i].split("v"))
-					
-					if len(splited_name[i].split("v"))==2:
-						
-						if (splited_name[i].split("v")[1].isnumeric())==True:
-							splited_name[i] = "publish"
-							version_present=True 
-							break
-			if version_present==False:
-				splited_name.insert(0, "Publish")
-
-			confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
-			if confirm_saving == "No":
-				return
-			filename = "_".join(splited_name)+extension
-			mc.file(save=True)
-			#save the new file at the new destination
-			mc.file(rename=os.path.join(publish_path, filename))
-			if extension == ".ma":
-				mc.file(save=True, type="mayaAscii")
-			if extension == ".mb":
-				mc.file(save=True, type="mayaBinary")
-			mc.warning("Publish scene saved successfully")
-			print(self.user_settings["ExportRaimbow"])
-			if self.user_settings["ExportRaimbow"]==True:
-				self.print_color_for_publish_function()
-
-			print(os.path.join(publish_path, filename))
-
-
-
-		if mc.checkBox(self.export_publish_searchlocation_checkbox, query=True, value=True)==True:
-			#get values from folder presets
-			edit_folder_name = mc.textField(self.settings_editfolder_textfield, query=True, text=True)
-			publish_folder_name = mc.textField(self.settings_publishfolder_textfield, query=True, text=True)
-
-			if (self.letter_verification_function(edit_folder_name)==False) or (self.letter_verification_function(publish_folder_name)==False):
-				mc.error("Impossible to get edit / publish folder names!")
-				return
-			
-			if os.path.isdir(project_path)==False:
-				mc.error("Impossible to export, project isn't defined!")
-				return
-			
-			find = False 
-			path = current_scene_path
-			folder_to_recreate = []
-			for i in range(0, len(current_scene_path.split("/"))):
-			
-
-				if os.path.basename(path) == edit_folder_name:
-					if os.path.isdir(os.path.join(os.path.dirname(path), publish_folder_name))==True:
-						folder_to_recreate.pop(-1)
-						publish_path = os.path.join(os.path.dirname(path), publish_folder_name)
-						find = True
-
-						#recreate folders if they don't exist
-						folder_to_recreate.reverse()
-						for i in range(0, len(folder_to_recreate)):
-							if os.path.isdir(os.path.join(publish_path,folder_to_recreate[i]))==False:
-								os.mkdir(os.path.join(publish_path, folder_to_recreate[i]))
-							publish_path = os.path.join(publish_path,folder_to_recreate[i])
-							
-						#detect the new nomenclature of the file
-						extension = os.path.splitext(current_scene_path)[1]
-						splited_name = os.path.basename(os.path.splitext(current_scene_path)[0]).split("_")
-						version_present=False
-						for i in range(0, len(splited_name)):
-							if list(splited_name[i])[0] == "v":
-								#print(splited_name[i].split("v"))
-								
-								if len(splited_name[i].split("v"))==2:
-									
-									if (splited_name[i].split("v")[1].isnumeric())==True:
-										splited_name[i] = "publish"
-										version_present=True 
-										break
-								
-						if version_present==False:
-							splited_name.insert(0, "Publish")
-						filename = "_".join(splited_name)+extension
-						confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
-						if confirm_saving == "No":
-							return
-						#save the current file
-						mc.file(save=True)
-						#save the new file at the new destination
-						mc.file(rename=os.path.join(publish_path, filename))
-						if extension == ".ma":
-							mc.file(save=True, type="mayaAscii")
-						if extension == ".mb":
-							mc.file(save=True, type="mayaBinary")
-
-						mc.warning("Publish scene saved successfully")
-						print(self.user_settings["ExportRaimbow"])
-						if self.user_settings["ExportRaimbow"] == True:
-							self.print_color_for_publish_function()
-
-						print(os.path.join(publish_path, filename))
-						self.take_picture_function("test")
-						break
-				folder_to_recreate.append(os.path.basename(os.path.dirname(path)))	
-				if os.path.basename(path) == project_name:
-					mc.error("No edit folder found in the project!")
-					return
-
-				
-				path = os.path.normpath(path+os.sep+os.pardir)
-
-
-
 			
 			
 
@@ -1996,21 +1708,24 @@ class PipelineApplication:
 						if (os.path.splitext(file)[1] in final_extension_list) != True:
 							continue
 
+					error = False
 					for keyword in searchbar_content:
 						if (keyword in file) == False:
-							valid=False 
+							error=True 
 
-					if valid == True:
+					if error == False:
 						file_list.append(file)
 				
 			mc.progressWindow(endProgress=True)
 		else:
 			file_list = []
 			for file, file_data in self.pipeline_index.items():
+				error=False
 				for keyword in searchbar_content:
-					if keyword in file:
-						file_list.append(file)
-						break
+					if keyword not in file:
+						error=True 
+				if error==False:
+					file_list.append(file)
 
                 
      	
@@ -2412,6 +2127,10 @@ class PipelineApplication:
 		type_selection = mc.textScrollList(self.export_type_textscrolllist, query=True, si=True)
 		kind_selection = mc.textScrollList(self.export_kind_textscrolllist, query=True, si=True)
 
+		#print(type_selection)
+		#print(kind_selection)
+
+
 		if type_selection == None:
 			mc.error("You have to select a type!")
 			return
@@ -2435,6 +2154,8 @@ class PipelineApplication:
 			final_filename = []
 
 			for i in range(0, len(splited_nomenclature)):
+				if splited_nomenclature[i] == "[type]":
+					final_filename.append(kind_selection[0])
 				#print(splited_nomenclature[i])
 				if splited_nomenclature[i] == "[key]":
 					#print("nique tes grands morts maya!")
@@ -2473,13 +2194,13 @@ class PipelineApplication:
 							mc.error("Impossible to get the actual name of the file to create the filename!")
 							return
 						else:
-							print(actual_name)
+							#print(actual_name)
 							final_filename.append(actual_name)
 					else:
 						#try to get the content of the textfield
 						content = mc.textField(self.export_edit_name_textfield, query=True, text=True)
 						if (self.letter_verification_function(content)==True):
-							print(content)
+							#print(content)
 							final_filename.append(content)
 						else:
 							mc.error("Impossible to get the name in textfield!")
@@ -2488,11 +2209,14 @@ class PipelineApplication:
 				if splited_nomenclature[i] == "[version]":
 					#if mc.checkBox(self.export_edit_version_checkbox, query=True, value=True) == False:
 						#try to get the version in textfield
-					content = mc.intField(self.export_edit_version_intfield, query=True, value=True)
-					if len(list(str(content))) == 1:
-						content = "v00%s"%content 
+					if status == "publish":
+						content = "publish"
 					else:
-						content = "v0%s"%content 
+						content = mc.intField(self.export_edit_version_intfield, query=True, value=True)
+						if len(list(str(content))) == 1:
+							content = "v00%s"%content 
+						else:
+							content = "v0%s"%content 
 
 					final_filename.append(content)
 
@@ -2519,10 +2243,9 @@ class PipelineApplication:
 					else:
 						final_filename.append(os.path.basename(self.project_path))
 
-				if splited_nomenclature[i] == "[type]":
-					final_filename.append(kind_selection[0])
+				
 			
-			print(final_filename)
+			#print(final_filename)
 			return "_".join(final_filename)+".ma"
 
 
@@ -2697,6 +2420,8 @@ class PipelineApplication:
 	def export_edit_function(self, info, event):
 		filename = self.define_export_nomenclature_function("edit")
 		filepath = self.define_export_path_function(filename, "edit")
+		include_shader = mc.checkBox(self.export_shader_checkbox, query=True, value=True)
+		print("Included shaders ? %s"%include_shader)
 
 		extension = "mayaAscii"
 		if (mc.checkBox(self.export_item_checkbox, query=True, value=True)==True):
@@ -2731,7 +2456,7 @@ class PipelineApplication:
 			try:
 				os.makedirs(filepath, exist_ok=True)
 				mc.file(rename=final_path)
-				mc.file(save=True, type=extension)
+				mc.file(save=True, type=extension, f=True, sh=include_shader)
 
 				mc.warning("File saved successfully!")
 				print(final_path)
@@ -2740,33 +2465,28 @@ class PipelineApplication:
 				mc.error("Impossible to save the file!")
 				return
 		else:
+			print("export selection")
 			#get maya selection
 			selection = mc.ls(sl=True)
 			if (len(selection))==0:
 				mc.error("No item selected to export!")
 				return
-			try:
-				os.makedirs(filepath, exist_ok=True)
-				mc.file(final_path,force=True, shader=True, pr=True, es=True, type=extension)
-				mc.warning("Selection exported successfully!")
-				print(final_path)
 			
-			except:
-				mc.error("Impossible to export selection!")
-				return
-		#define a random number between 0 and 100 (1/4 chances)
-		
-		#print("Are you lucky")
-		random_number = randrange(0, 100)
-		if (random_number < 50):
-			if self.user_settings["ExportWebsite"]==True:
-				self.open_website_for_edit_function()
+			os.makedirs(filepath, exist_ok=True)
+			mc.file(final_path, es=True, pr=True, f=True, type="mayaAscii", sh=include_shader)
+			mc.warning("Selection exported successfully!")
+			print(final_path)
+	
 		
 
 	def create_path_function(self, event):
 		os.makedirs(path, exist_ok=True)
 
+
+
+
 	def export_publish_function(self, info, event):
+
 		if (self.letter_verification_function(mc.file(query=True, sn=True)) !=True):
 			mc.error("Impossible to publish a scene that is not saved before as edit file!")
 			return
@@ -2776,7 +2496,7 @@ class PipelineApplication:
 		if mc.file(query=True, sn=True) == None:
 			mc.error("You can't publish a scene that is not saved before!")
 			return"""
-		
+		"""
 		for i in range(0, len(splited_filename)):
 			for key, value in self.settings.items():
 				if value[1] == splited_filename[i]:
@@ -2795,8 +2515,12 @@ class PipelineApplication:
 						return
 
 		filename = "_".join(splited_filename) + ".ma"
+		"""
+		filename = self.define_export_nomenclature_function("publish")
 		filepath = self.define_export_path_function(filename, "publish")
 		final_path = os.path.join(filepath, filename)
+		include_shader= mc.checkBox(self.export_shader_checkbox, query=True, value=True)
+		print("Shaders included ? %s"%include_shader)
 
 		extension = "mayaAscii"
 		if (mc.checkBox(self.export_item_checkbox, query=True, value=True)==True):
@@ -2806,7 +2530,8 @@ class PipelineApplication:
 
 		print("Returned filename : [%s]"%filename)
 		print("Returned filepath : [%s]"%filepath)
-		print(final_path)
+		#print(final_path)
+
 
 		#check the value of the overwrite publish or create publish backup if publish is existing
 		#if the publish already exists rename it under a new name (file_publish.ma.backup)
@@ -2817,8 +2542,8 @@ class PipelineApplication:
 				try:
 					os.rename(final_path, "%s.backup"%final_path)
 				except:
-					mc.error("Impossible to create the backup file for the publish!")
-					return
+					mc.warning("Impossible to create the backup file for the publish!")
+					
 
 		#ASK FOR CONFIRMATION
 		confirm_saving = mc.confirmDialog( title='Confirm saving', message='Are you sure you want to save / export?', button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
@@ -2852,7 +2577,8 @@ class PipelineApplication:
 				return
 			
 			os.makedirs(filepath, exist_ok=True)
-			mc.file(final_path,force=True, shader=True, pr=True, es=True, type=extension)
+			#mc.file(final_path,force=True, pr=True, es=True, type=extension, sh=include_shader)
+			mc.file(final_path, es=True, pr=True, f=True, type="mayaAscii", sh=include_shader)
 			mc.warning("Selection exported successfully!")
 			"""
 			if self.user_settings["ExportRaimbow"]==True:
