@@ -41,7 +41,7 @@ class Application:
 		self.switch_settings = {
 			"lookdevNaked":"lookdevNaked",
 			"lookdevProxy":"lookdevProxy",
-			"lookdev":"loookdev",
+			"lookdev":"lookdev",
 		}
 		try:
 			with open(os.path.join(os.getcwd(), "PipoReplaceRefsData.json"), "w") as save_file:
@@ -63,12 +63,16 @@ class Application:
 
 		try:
 			with open(os.path.join(os.getcwd(), "PipoReplaceRefsData.json"), "r") as read_file:
-				content = json.load(read_file)
+				self.switch_settings = json.load(read_file)
 		except:
 			mc.warning("Impossible to load settings!")
 			self.create_default_settings()
-			return
-		else:
+		
+		#update textscrolllist
+		value_list = list(self.switch_settings.values())
+		mc.textScrollList(self.left_textscrolllist, edit=True, removeAll=True, append=value_list)
+		mc.textScrollList(self.right_textscrolllist, edit=True, removeAll=True, append=value_list)
+
 			
 
 
@@ -83,14 +87,17 @@ class Application:
 		self.main_column = mc.columnLayout(adjustableColumn=True, parent=self.main_window)
 		mc.text(label="PipoReplaceRefs - By Quazar", parent=self.main_column, align="center")
 
-		mc.button(label="Switch Refs", parent=self.main_column, command=self.switch_refs_function)
+		
 
 		self.main_rowcolumn = mc.rowColumnLayout(parent=self.main_column, numberOfColumns=2, columnWidth=((1, self.width/2), (2, self.width/2)))
 		self.leftcolumn = mc.columnLayout(adjustableColumn=True, parent=self.main_rowcolumn)
 		self.rightcolumn = mc.columnLayout(adjustableColumn=True, parent=self.main_rowcolumn)
 
-		self.left_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.leftcolumn)
-		self.right_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.rightcolumn)
+		self.left_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.leftcolumn, allowMultiSelection=False)
+		self.right_textscrolllist = mc.textScrollList(numberOfRows=8, parent=self.rightcolumn, allowMultiSelection=False)
+
+		mc.separator(style="doubleDash", height=25, parent=self.main_column)
+		mc.button(label="Switch Refs", parent=self.main_column, command=self.switch_references_function)
 
 
 
@@ -111,6 +118,48 @@ class Application:
 				if child not in self.first_ref_children:
 					self.first_ref_children.append(child)
 				self.get_children_function(child)	
+
+
+
+
+
+	def switch_references_function(self, event):
+		"""
+		get both types selected
+		get outliner selection
+		switch from one reference type to an other and 
+		change reference path in reference editor
+		"""
+		selection = mc.ls(sl=True)
+		try:
+			origin = mc.textScrollList(self.left_textscrolllist, query=True, si=True)[0]
+			destination = mc.textScrollList(self.right_textscrolllist, query=True, si=True)[0]
+		except:
+			mc.error("You have to select an origin type and a destination path\nfor your references!")
+			return
+
+		for element in selection:
+			#check if element is a reference
+			if mc.referenceQuery(element, inr=True) == True:
+				ref_path = mc.referenceQuery(element, filename=True, un=True, wcn=True)
+				ref_name = mc.referenceQuery(element, filename=True, shn=True, wcn=True)
+
+				
+				
+				if origin not in ref_path:
+					mc.warning("Impossible to find origin in reference name! Skipped [%s]"%ref_path)
+					continue
+				else:
+
+					replace_path = ref_path.replace(origin, destination)
+					if os.path.isfile(replace_path)==True:
+						reference_node = mc.file(ref_path, query=True, referenceNode=True)
+						mc.file(replace_path, loadReference=reference_node)
+					else:
+						mc.warning("Impossible to switch reference, file doesn't exist!")
+						continue
+			else:
+				mc.warning("Not a reference ! Skipped [%s]"%element)
 
 		
 

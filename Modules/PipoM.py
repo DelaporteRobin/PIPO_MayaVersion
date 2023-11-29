@@ -2105,6 +2105,7 @@ class PipelineApplication:
 			"export_item_checkbox":mc.checkBox(self.export_item_checkbox, query=True, value=True),
 			"export_edit_name_checkbox":mc.checkBox(self.export_edit_name_checkbox, query=True, value=True),
 			"export_backup_publish_checkbox":mc.checkBox(self.export_backup_publish_checkbox, query=True, value=True),
+			"export_shader_checkbox":mc.checkBox(self.export_shader_checkbox, query=True, value=True),
 		}
 
 		"""

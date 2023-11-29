@@ -303,27 +303,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
 				self.create_pipeline_index_thread.start()
-			#self.create_pipeline_index_function(self.project_path)
-			"""
-			try:
-				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), "r") as read_file:
-					content = json.load(read_file)
-				self.settings_mirror = content["mirrorSettings"]
-				self.settings_dictionnary_mirror = content["mirrorSettingsDictionnary"]
-				self.pipeline_index = content["pipelineIndex"]
 
-				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
-				self.create_pipeline_index_thread.start()
-			except:
-				mc.warning("Impossible to launch Pipeline index!")
-
-				self.pipeline_index = {}
-				self.settings_mirror = {}
-				self.settings_dictionnary_mirror = {}
-				
-				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
-				self.create_pipeline_index_thread.start()
-			"""
 		
 
 
@@ -488,6 +468,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		#SEARCHBAR
 		self.searchbar_limit_frame = mc.frameLayout(backgroundColor=self.bright_color, parent=self.assets_main_leftcolumn, label="Research settings", collapsable=True, collapse=True)
 		self.index_checkbox = mc.checkBox(label="Use Index file", value=True, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
+		mc.button(label="Refresh Index file", parent=self.searchbar_limit_frame, command=self.call_index_file_function)
 		self.projectcontent_checkbox = mc.checkBox(label="Only display project name", value=True, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
 		mc.separator(style="singleDash", height=5, parent=self.searchbar_limit_frame)
 		self.searchbar_checkbox = mc.checkBox(label="Limit research to project", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, "none"), onCommand=partial(self.save_additionnal_settings_function, "project"))
@@ -844,7 +825,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		#self.export_publish_keepname_checkbox = mc.checkBox(label="Keep item name", parent=self.export_leftcolumn)
 		mc.button(label="Publish selected", parent=self.export_publish_frame,command=partial(self.export_publish_function, "selection"))
 
-		self.export_shader_checkbox = mc.checkBox(value=True, parent=self.export_leftcolumn, label="Export with shader")
+		self.export_shader_checkbox = mc.checkBox(value=True, parent=self.export_leftcolumn, label="Export with shader", changeCommand=partial(self.save_additionnal_settings_function, "none"))
 
 		#textscrolllist of export window
 		self.export_right_rowcolumn = mc.rowColumnLayout(numberOfColumns=2, columnWidth=((1, self.window_width*(2/6)), (2, self.window_width*(2/6))), parent=self.export_rightcolumn)
@@ -1087,6 +1068,35 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			mc.textField(self.export_name_textfield, edit=True, enable=False)
 		else:
 			mc.textField(self.export_name_textfield, edit=True, enable=True)
+
+
+
+	def call_index_file_function(self, event):
+		if os.path.isdir(self.project_path)==True:
+			try:
+				with open(os.path.join(self.project_path, "PipelineManagerData/ArchiveData.dll"), "rb") as read_file:
+					self.archive_data = pickle.load(read_file)
+
+			except:
+				mc.warning("Impossible to load archive data!")
+
+			try:
+				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineIndex.json"), 'r') as read_file:
+					content = json.load(read_file)
+				self.settings_mirror = content["mirrorSettings"]
+				self.settings_dictionnary_mirror = content["mirrorSettingsDictionnary"]
+				self.pipeline_index = content["pipelineIndex"]
+
+				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
+				self.create_pipeline_index_thread.start()
+			except:
+				self.settings_mirror = {}
+				self.settings_dictionnary_mirror = {}
+				self.pipeline_index = {}
+
+				self.create_pipeline_index_thread = threading.Thread(target=partial(self.create_pipeline_index_function, self.project_path))
+				self.create_pipeline_index_thread.start()
+
 
 	
 

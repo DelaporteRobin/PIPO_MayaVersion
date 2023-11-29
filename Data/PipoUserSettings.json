@@ -15,6 +15,7 @@
         "export_projectassist_folder_checkbox": true,
         "export_item_checkbox": false,
         "export_edit_name_checkbox": false,
-        "export_backup_publish_checkbox": false
+        "export_backup_publish_checkbox": false,
+        "export_shader_checkbox": true
     }
 }
