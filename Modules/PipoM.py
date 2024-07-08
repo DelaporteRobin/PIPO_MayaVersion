@@ -69,10 +69,40 @@ class PipelineApplication:
 			
 			if type(self.project_path)==list:	
 				self.project_path = self.project_path[0]
+
+
+
+			#try to load settings files from pipeline
+			#if file are missing call creation
+			try:
+				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineSettings.json"), "r") as read_file:
+					load_data = json.load(read_file)
+				self.settings = load_data["dict1"]
+				self.settings_dictionnary = load_data["dict2"]
+				self.additionnal_settings = load_data["dict3"]
+				self.texture_settings = load_data["dict4"]
+			except:
+				mc.warning("Impossible to load pipeline settings!")
+				self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings = self.create_pipeline_settings_function("pipeline_settings")
+			else:
+				print("Pipeline settings loaded!")
+
+
+
+			try:
+				with open(os.path.join(self.program_folder, "Data/PipoUserSettings.json"), "r") as read_file:
+					user_settings = json.load(read_file)
+
+				self.user_settings = user_settings["dict1"]
+			except:
+				mc.warning("Impossible to load user settings!")
+				self.user_settings = self.create_pipeline_settings_function("user_settings")
+			else:
+				print("User settings loaded!")
 			
 		
 		
-		
+			"""
 			try:
 				with open(os.path.join(self.project_path, "PipelineManagerData/PipelineSettings.json"), "r") as read_file:
 					load_data = json.load(read_file)
@@ -91,6 +121,7 @@ class PipelineApplication:
 			except:
 				self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings = self.create_pipeline_settings_function()
 				print("Settings file created in your project!")
+			"""
 			
 			
 				
@@ -221,9 +252,12 @@ class PipelineApplication:
 				os.mkdir(os.path.join(path, "PipelineManagerData"))
 			
 			try:
+				print(self.user_settings)
 				user_dictionnary = {
 					"dict1": self.user_settings,
 				}
+				print("SAVING USER DICTIONNARY")
+				print(user_dictionnary)
 				saving_dictionnary = {
 					"dict1":self.settings,
 					"dict2":self.settings_dictionnary,
@@ -250,110 +284,113 @@ class PipelineApplication:
 
 
 	
-	def create_pipeline_settings_function(self):
+	def create_pipeline_settings_function(self, info):
 		print("Settings file created!")
 		basic_file_type_list = ["mod", "rig", "groom", "cloth", "lookdev", "layout", "camera", "anim", "render", "compositing"]
 
-		#TYPE OF DATA
-		#DETECTION OF FILES
-		self.settings_dictionnary = {
-			"character": basic_file_type_list,
-			"prop": basic_file_type_list, 
-			"set": basic_file_type_list,
-			"fx": "unknown",
-			"shots": ["layout", "camera", "anim", "render", "compositing"],
-		}
-		self.settings = {
-			"character":["[project]_[key]_[name]_[type]", "char", None],
-			"prop":["[project]_[key]_[name]_[type]", "prop", None],
-			"set":["[project]_[key]_[name]_[type]", "set", None],
-			"fx":["[project]_[key]_[name]_[type]","fx", None],
-			"shots":["[project]_[key]_[sqversion]_[shversion]", "shots", {"folder1":"folder1", "folder2":"folder2"},]
-		}
-		self.additionnal_settings = {
-			#"checkboxValues":[False, False, True, False, False, False],
-			"3dSceneExtension":[".ma",".mb"],
-			"3dItemExtension":[".obj", ".fbx"],
-			"texturesExtension":[".png", ".tif",".tiff",".tex", ".exr", ".jpg"],
-			"dodgeList":["RND"],
-			"mayaProjectName":"maya",
-			"editPublishFolder":["edit", "publish"],
-			"renderFolderInProject":"images",
-			"renderFrameSyntax":["[content].[frame]", "[content]_[frame]"],
-			"textureFolderInProject": "3dPaintTextures",
-			"discordBotToken":None,
-			"discordChannelId":None,
-			"renderEngine":"Renderman",
-			"renderShaderNodeList":["lambert"]
-		}
-		"""
-		self.user_settings = {
-			"checkboxValuesMainPage":[False, True, True, False, False],
-			"checkboxValuesRenamePanel":[False, False],
-			"checkboxValuesTextureLinkingPanel":[True, False, True, True],
-			"checkboxValuesMissingFramesPanel":[False],
-			"checkboxValuesExportPanel":[False, False, True, False, False, False],
-			"FavoriteFiles":{},
-			"ExportRaimbow":True,
-			"ExportWebsite":True,
-		}
-		"""
-		self.user_settings = {
-			"index_checkbox":True,
-			"projectcontent_checkbox":False,
-			"searchbar_checkbox":False,
-			"folder_checkbox":True,
-			"scenes_checkbox":True,
-			"items_checkbox":True,
-			"textures_checkbox":False,
-
-			"archivemenu_projectcheckbox":False,
-			"archivemenu_pipelinecheckbox":False,
-
-			"render_texture_manual_checkbox":True,
-			"render_texture_automatic_checkbox":False,
-			"render_texture_limit_project":False,
-			"render_texture_udim_checking":True,
-
-			"export_current_folder_checkbox":False,
-			"export_custom_folder_checkbox":False,
-			"export_assist_folder_checkbox":False,
-			"export_projectassist_folder_checkbox":True,
-			"export_item_checkbox":True,
-			"export_edit_name_checkbox":False,
-			"export_backup_publish_checkbox":True,
-		}
-		
-		self.texture_settings = {
-
-			"Renderman": {
-				"textureNodes": {
-					"PxrTexture":"filename",
-					"PxrNormalMap":"filename"
+		if info == "pipeline_settings":
+			#TYPE OF DATA
+			#DETECTION OF FILES
+			self.settings_dictionnary = {
+				"character": basic_file_type_list,
+				"prop": basic_file_type_list, 
+				"set": basic_file_type_list,
+				"fx": "unknown",
+				"shots": ["layout", "camera", "anim", "render", "compositing"],
+			}
+			self.settings = {
+				"character":["[project]_[key]_[name]_[type]", "char", None],
+				"prop":["[project]_[key]_[name]_[type]", "prop", None],
+				"set":["[project]_[key]_[name]_[type]", "set", None],
+				"fx":["[project]_[key]_[name]_[type]","fx", None],
+				"shots":["[project]_[key]_[sqversion]_[shversion]", "shots", {"folder1":"folder1", "folder2":"folder2"},]
+			}
+			self.additionnal_settings = {
+				#"checkboxValues":[False, False, True, False, False, False],
+				"3dSceneExtension":[".ma",".mb"],
+				"3dItemExtension":[".obj", ".fbx"],
+				"texturesExtension":[".png", ".tif",".tiff",".tex", ".exr", ".jpg"],
+				"lodInterval":[1,3],
+				"dodgeList":["RND"],
+				"mayaProjectName":"maya",
+				"exportSelectionTypeList":["character","prop"],
+				"editPublishFolder":["edit", "publish"],
+				"renderFolderInProject":"images",
+				"renderFrameSyntax":["[content].[frame]", "[content]_[frame]"],
+				"textureFolderInProject": "3dPaintTextures",
+				"discordBotToken":None,
+				"discordChannelId":None,
+				"renderEngine":"Renderman",
+				"renderShaderNodeList":["lambert"]
+			}
+			self.texture_settings = {
+				"Renderman": {
+					"textureNodes": {
+						"PxrTexture":"filename",
+						"PxrNormalMap":"filename"
+					},
+					"shadingNodes": ["PxrSurface", "PxrLayerSurface", "PxrDisplace"],
+					"channelData": {
+						"DIFFUSE": {
+							"keywordList":["diffuse", "diff", "Diff", "Diffuse", "Albedo"],
+							"textureNode":"PxrTexture",
+							},
+						"ROUGHNESS": {
+							"keywordList":["roughness", "Rough", "Roughness"],
+							"textureNode":"PxrTexture",
+							},
+						"NORMAL": {
+							"keywordList":["normal", "Normal"],
+							"textureNode":"PxrNormalMap",
+							},
+					},
 				},
-				"shadingNodes": ["PxrSurface", "PxrLayerSurface", "PxrDisplace"],
-				"channelData": {
-					"DIFFUSE": {
-						"keywordList":["diffuse", "diff", "Diff", "Diffuse", "Albedo"],
-						"textureNode":"PxrTexture",
-						},
-					"ROUGHNESS": {
-						"keywordList":["roughness", "Rough", "Roughness"],
-						"textureNode":"PxrTexture",
-						},
-					"NORMAL": {
-						"keywordList":["normal", "Normal"],
-						"textureNode":"PxrNormalMap",
-						},
+
+			}
+			self.save_settings_file()
+			return self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings
+
+		if info == "user_settings":
+			self.user_settings = {
+				"CheckboxValues": {
+					"lastsyntax_checkbox":True,
+					"index_checkbox":True,
+					"projectcontent_checkbox":False,
+					"searchbar_checkbox":False,
+					"folder_checkbox":True,
+					"scenes_checkbox":True,
+					"items_checkbox":True,
+					"textures_checkbox":False,
+
+					"archivemenu_projectcheckbox":False,
+					"archivemenu_pipelinecheckbox":False,
+
+					"render_texture_manual_checkbox":True,
+					"render_texture_automatic_checkbox":False,
+					"render_texture_limit_project":False,
+					"render_texture_udim_checking":True,
+
+					"export_current_folder_checkbox":False,
+					"export_custom_folder_checkbox":False,
+					"export_assist_folder_checkbox":False,
+					"export_projectassist_folder_checkbox":True,
+					"export_item_checkbox":True,
+					"export_edit_name_checkbox":False,
+					"export_backup_publish_checkbox":True,
 				},
-			},
-
-		}
+				"AdditionalData": {
+					"FavoriteFiles":{},
+					"ExportRaimbow":True,
+					"ExportWebsite":True,
+					"Notification":False,
+					"TagKind":["character", "item"],
+					"TagState":["publish"],
+					"TagType":["mod", "lookdev", "lookdevProxy"]
+				}
+			}
+			self.save_settings_file()
+			return self.user_settings
 		
-		
-
-		self.save_settings_file()
-		return self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings
 
 
 	
@@ -383,9 +420,11 @@ class PipelineApplication:
 			"3dItemExtension":[".obj"],
 			"texturesExtension":[".png", ".tif",".tiff",".tex", ".exr", ".jpg"],
 			"dodgeList":["RND"],
+			"lodInterval":[1,3],
 			"mayaProjectName":"maya",
 			"editPublishFolder":["edit", "publish"],
 			"renderFolderInProject":"images",
+			"exportSelectionTypeList":["character","prop"],
 			"renderFrameSyntax":["[content].[frame]", "[content]_[frame]"],
 			"textureFolderInProject":"sourceimages",
 			"discordBotToken":None,
@@ -394,29 +433,41 @@ class PipelineApplication:
 			"renderShaderNodeList":["lambert"],
 		}
 		self.default_user_settings = {
-			"index_checkbox":True,
-			"projectcontent_checkbox":False,
-			"searchbar_checkbox":False,
-			"folder_checkbox":True,
-			"scenes_checkbox":True,
-			"items_checkbox":True,
-			"textures_checkbox":False,
+			"CheckboxValues": {
+				"lastsyntax_checkbox":True,
+				"index_checkbox":True,
+				"projectcontent_checkbox":False,
+				"searchbar_checkbox":False,
+				"folder_checkbox":True,
+				"scenes_checkbox":True,
+				"items_checkbox":True,
+				"textures_checkbox":False,
 
-			"archivemenu_projectcheckbox":False,
-			"archivemenu_pipelinecheckbox":False,
+				"archivemenu_projectcheckbox":False,
+				"archivemenu_pipelinecheckbox":False,
 
-			"render_texture_manual_checkbox":True,
-			"render_texture_automatic_checkbox":False,
-			"render_texture_limit_project":False,
-			"render_texture_udim_checking":True,
+				"render_texture_manual_checkbox":True,
+				"render_texture_automatic_checkbox":False,
+				"render_texture_limit_project":False,
+				"render_texture_udim_checking":True,
 
-			"export_current_folder_checkbox":False,
-			"export_custom_folder_checkbox":False,
-			"export_assist_folder_checkbox":False,
-			"export_projectassist_folder_checkbox":True,
-			"export_item_checkbox":True,
-			"export_edit_name_checkbox":False,
-			"export_backup_publish_checkbox":True,
+				"export_current_folder_checkbox":False,
+				"export_custom_folder_checkbox":False,
+				"export_assist_folder_checkbox":False,
+				"export_projectassist_folder_checkbox":True,
+				"export_item_checkbox":True,
+				"export_edit_name_checkbox":False,
+				"export_backup_publish_checkbox":True,
+			},
+			"AdditionalData": {
+					"FavoriteFiles":{},
+					"ExportRaimbow":True,
+					"ExportWebsite":True,
+					"Notification":False,
+					"TagKind":["character", "item"],
+					"TagState":["publish"],
+					"TagType":["mod", "lookdev", "lookdevProxy"]
+			}
 		}
 		
 		self.default_texture_settings = {
@@ -432,7 +483,7 @@ class PipelineApplication:
 						"keywordList":["diffuse", "diff", "Diff", "Diffuse", "Albedo"],
 						"textureNode":"PxrTexture",
 						},
-					"ROUGHNESS": {
+						"ROUGHNESS": {
 						"keywordList":["roughness", "Rough", "Roughness"],
 						"textureNode":"PxrTexture",
 						},
@@ -725,7 +776,7 @@ class PipelineApplication:
 										continue
 							
 							if seq_selection != None:
-								if "[sqversion" in splited_syntax:
+								if "[sqversion]" in splited_syntax:
 									seq_index = splited_syntax.index("[sqversion]")
 									if splited_filename[seq_index] not in seq_selection:
 										continue
@@ -780,17 +831,26 @@ class PipelineApplication:
 				"""
 				file_pipeline_index = list(self.pipeline_index.keys())
 				for file in file_pipeline_index:
-					value, value_key, sqversion, shversion = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection, seq_selection, shot_selection)
-					#print(value, value_key, sqversion, shversion)
+					result = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection, seq_selection, shot_selection)
+					
+					if result != None:
+						value, value_key, sqversion, shversion = result
+					try:
+						value, value_key, sqversion, shversion = self.check_syntax_from_selection_function(file, type_selection, kind_selection, name_selection, seq_selection, shot_selection)
+					except:
+						value, value_key, sqversion, shversion = [False, False, False, False] 
+					else:
+						pass
+
 
 					#print(file, value, value_key, sqversion, shversion)
 					
 					if value != False:
-						if (sqversion != False) and (sqversion != None):
+						if (sqversion != False) and (sqversion != "None") and (shversion != None):
 							if sqversion not in final_seq_list:
 								final_seq_list.append(sqversion)
 
-						if (shversion != False) and (shversion != None):
+						if (shversion != False) and (shversion != "None") and (shversion != None):
 							if shversion not in final_shot_list:
 								final_shot_list.append(shversion)
 						#check if the path of the file is in the starting path
@@ -898,6 +958,9 @@ class PipelineApplication:
 		print("\nSEARCHING DONE!!!\n")
 		mc.progressWindow(endProgress=True)
 
+		final_name_list.sort(key=lambda x: x.lower())
+		final_file_list.sort(key=lambda x: x.lower())
+
 		
 		mc.textScrollList(self.result_list, edit=True,removeAll=True, append=final_file_list)
 
@@ -911,6 +974,7 @@ class PipelineApplication:
 		#update the name list!!!
 		#print(name_selection, self.current_name)
 		#print(type_selection, self.current_type)
+
 		 
 
 		try:
@@ -945,97 +1009,146 @@ class PipelineApplication:
 	def check_syntax_from_selection_function(self, file, type_selection, kind_selection, name_selection, seq_selection, shot_selection):
 		file, extension = os.path.splitext(file)
 		#get the selection in textscrolllist
-		error=False
-		final_name = None
+		
+		final_name = "None"
 		splited_file = file.split("_")
-		current_type = None
-		final_seq = None 
-		final_shot = None
+		current_type = "None"
+		final_seq = "None" 
+		final_shot = "None"
+		final_lod = "None"
 		
 		if type_selection != None:
 			for t in type_selection:
 				#get the syntax for the given type
-				type_syntax = self.settings[t][0]
-				splited_type_syntax = type_syntax.split("_")
+				type_syntax_data = self.settings[t][0]
+				#print(type_syntax_data)
 
-				#print(splited_type_syntax, splited_file)
-
-				if len(splited_type_syntax) != len(splited_file):
-					error=True
-					continue
-
-				#get the index of the keyword in the syntax
-				try:
-					type_index = splited_type_syntax.index('[key]')
-				except:
-					mc.error("No key in the syntax!")
-					return
-				
-
-				#print(splited_file[type_index], self.settings[t][1])
-				if splited_file[type_index] != self.settings[t][1]:
-					error=True 
+				#check if the syntaix already a list => several syntax
+				"""
+				if type(type_syntax_data)!= list:
+					type_syntax_data = [type_syntax_data]
+				"""
+				if type(type_syntax_data) != list:
+					type_syntax_data = [type_syntax_data]
 				else:
-					current_type = splited_file[type_index]
-					#detect the filename of the current file
-				
-					#print("[sqversion]" in splited_type_syntax, "[shversion]" in splited_type_syntax)
-					if '[sqversion]' in splited_type_syntax:
-						final_seq = splited_file[splited_type_syntax.index('[sqversion]')]
-					if '[shversion]' in splited_type_syntax:
-						final_shot = splited_file[splited_type_syntax.index('[shversion]')]
-					if '[name]' in splited_type_syntax:
-						final_name = splited_file[splited_type_syntax.index('[name]')]
-						#print("FOUND A NAME %s"%final_name)
+
+					pass 
+					
+					if mc.checkBox(self.displayonlylastsyntax_checkbox, query=True, value=True)==True:
+						if len(self.settings[t][0]) > 1:
+							type_syntax_data = [self.settings[t][0][-1]]
+						else:
+							type_syntax_data = self.settings[t][0]
+					else:
+						pass
+					
+
+				#print(type_syntax_data)
+
+				for type_syntax in type_syntax_data:
+					error=False
+					splited_type_syntax = type_syntax.split("_")
+
+					#print(splited_type_syntax, splited_file)
+
+					if len(splited_type_syntax) != len(splited_file):
+						error=True
+						continue
+
+					#get the index of the keyword in the syntax
+					#print(splited_type_syntax)
+					type_index = splited_type_syntax.index('[key]')
+					"""
+					except:
+						mc.warning("No key in syntax!")
+						error=True
+						continue
+					"""
+					
+
+					#print(splited_file[type_index], self.settings[t][1])
+					if splited_file[type_index] != self.settings[t][1]:
+						#print("type error! %s"%splited_file)
+						error=True 
+					else:
+						current_type = splited_file[type_index]
+						#detect the filename of the current file
+					
+						#print("[sqversion]" in splited_type_syntax, "[shversion]" in splited_type_syntax)
+						if '[sqversion]' in splited_type_syntax:
+							final_seq = splited_file[splited_type_syntax.index('[sqversion]')]
+						if '[shversion]' in splited_type_syntax:
+							final_shot = splited_file[splited_type_syntax.index('[shversion]')]
+						if '[name]' in splited_type_syntax:
+							final_name = splited_file[splited_type_syntax.index('[name]')]
+							#print("FOUND A NAME %s"%final_name)
+						if '[lod]' in splited_type_syntax:
+							final_lod = splited_file[splited_type_syntax.index("[lod]")]
 
 
-				if kind_selection != None:
-					for kind in kind_selection:
-						
-						try:
-							kind_index = splited_type_syntax.index('[type]')
-						except:
-							mc.error("No kind in the syntax!")
-							return
-						print(splited_file, kind_index, kind)
-						if splited_file[kind_index] != kind:
-							error=True
+					if "[lod]" in splited_type_syntax:
+						#get min and maximum value
+						min_value = self.additionnal_settings["lodInterval"][0]
+						max_value = self.additionnal_settings["lodInterval"][1]
 
+						#split the lod item in the filename
+						splited_item = splited_file[splited_type_syntax.index("[lod]")].split("lod")
+						if len(splited_item) != 2:
+							error=True 
+						if (splited_item[0] != "") or (splited_item[1].isdigit() == False):
+							error=True 
+						else:
+							index = int(splited_item[1])
 
-				if seq_selection != None:
-					for seq in seq_selection:
-						try:
-							seq_index = splited_type_syntax.index("[sqversion]")
-						except:
-							mc.error("No sequence in the syntax!")
-							return 
-						print(splited_file)
-						print(seq_index)
-						if splited_file[seq_index] != seq:
-							error = True 
-
-				if shot_selection != None:
-					for shot in shot_selection:
-						try:
-							shot_index = splited_type_syntax.index('[shversion]')
-						except:
-							mc.error("No shot in the syntax!")
-							return 
-						if splited_file[shot_index] != shot:
-							error=True
-
-				if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
-					if name_selection != None:
-						for name in name_selection:
+							if (index < min_value) or (index > max_value):
+								error=True
+					if kind_selection != None:
+						for kind in kind_selection:
+							
 							try:
-								name_index = splited_type_syntax.index("[name]")
+								kind_index = splited_type_syntax.index('[type]')
 							except:
-								mc.error("No name in the syntax!")
+								mc.error("No kind in the syntax!")
 								return
+							if splited_file[kind_index] != kind:
 
-							if len(splited_file) == len(splited_type_syntax):
-								if splited_file[name_index] != name:
-									error=True
+								error=True
+
+
+					if seq_selection != None:
+						for seq in seq_selection:
+							try:
+								seq_index = splited_type_syntax.index("[sqversion]")
+							except:
+								mc.error("No sequence in the syntax!")
+								return 
+
+							if splited_file[seq_index] != seq:
+								error = True 
+
+					if shot_selection != None:
+						for shot in shot_selection:
+							try:
+								shot_index = splited_type_syntax.index('[shversion]')
+							except:
+								mc.error("No shot in the syntax!")
+								return 
+							if splited_file[shot_index] != shot:
+
+								error=True
+
+					if mc.checkBox(self.projectcontent_checkbox, query=True, value=True)==False:
+						if name_selection != None:
+							for name in name_selection:
+								try:
+									name_index = splited_type_syntax.index("[name]")
+								except:
+									mc.error("No name in the syntax!")
+									return
+
+								if len(splited_file) == len(splited_type_syntax):
+									if splited_file[name_index] != name:
+										error=True
 
 
 
@@ -1044,11 +1157,11 @@ class PipelineApplication:
 
 
 
-		if error==True:
-			return False, False, False, False
-		else:
-			
-			return final_name, current_type, final_seq, final_shot
+					if error==True:
+						return False, False, False, False
+					else:
+						#print(final_name, current_type, final_seq, final_shot)
+						return final_name, current_type, final_seq, final_shot
 
 
 
@@ -1163,9 +1276,9 @@ class PipelineApplication:
 			filepath = self.user_settings["FavoriteFiles"][favorite_selection[0]]
 			try:
 				if command == False:
-					mc.file(filepath, i=True)
+					mc.file(filepath, i=True, uns=True)
 				if command == True:
-					mc.file(filepath, r=True)
+					mc.file(filepath, r=True, uns=True, ns="")
 				mc.warning("File imported successfully [%s]!"%filepath)
 				return 
 			except:
@@ -1186,9 +1299,9 @@ class PipelineApplication:
 							if os.path.isfile(os.path.join(r, item))==True:
 								try:
 									if command==False:
-										mc.file(os.path.join(r, item), i=True)
+										mc.file(os.path.join(r, item), i=True, uns=True, ns="")
 									if command==True:
-										mc.file(os.path.join(r, item), r=True)
+										mc.file(os.path.join(r, item), r=True, uns=True, ns="")
 									#self.add_log_content_function("[%s] File imported successfully"%item)
 								except:
 									mc.error("Impossible to import file!")
@@ -1203,9 +1316,9 @@ class PipelineApplication:
 					if os.path.isfile(os.path.join(file_data["path"], file))==True:
 						try:
 							if command==False:
-								mc.file(os.path.join(file_data["path"],file),i=True)
+								mc.file(os.path.join(file_data["path"],file),i=True, uns=True, ns="")
 							else:
-								mc.file(os.path.join(file_data["path"],file),r=True)
+								mc.file(os.path.join(file_data["path"],file),r=True, uns=True, ns="")
 						except:
 							mc.error("Impossible to import file!")
 							return
@@ -1668,6 +1781,8 @@ class PipelineApplication:
 			mc.error("Nothing to search!")
 			return
 		searchbar_content = searchbar_content.split(";")
+		for i in range(len(searchbar_content)):
+			searchbar_content[i] = searchbar_content[i].lower()
 
 		if project_limit == True:
 			starting_folder = mc.workspace(query=True, active=True)
@@ -1710,7 +1825,7 @@ class PipelineApplication:
 
 					error = False
 					for keyword in searchbar_content:
-						if (keyword in file) == False:
+						if (keyword in file.lower()) == False:
 							error=True 
 
 					if error == False:
@@ -1722,7 +1837,7 @@ class PipelineApplication:
 			for file, file_data in self.pipeline_index.items():
 				error=False
 				for keyword in searchbar_content:
-					if keyword not in file:
+					if keyword not in file.lower():
 						error=True 
 				if error==False:
 					file_list.append(file)
@@ -1739,7 +1854,7 @@ class PipelineApplication:
 		if favorite_selection == None:
 			mc.error("Nothing to delete!")
 			return
-		favorite_data = self.user_settings["FavoriteFiles"]
+		favorite_data = self.user_settings["AdditionalData"]["FavoriteFiles"]
 		favorite_data.pop(favorite_selection[0])
 		self.user_settings["FavoriteFiles"] = favorite_data 
 		self.save_settings_file()
@@ -1753,11 +1868,11 @@ class PipelineApplication:
 		favorite_selection = mc.textScrollList(self.favorite_list, query=True, si=True)
 		if favorite_selection != None:
 			#get the user settings
-			file_to_open = self.user_settings["FavoriteFiles"][favorite_selection[0]]
+			file_to_open = self.user_settings["AdditionalData"]["FavoriteFiles"][favorite_selection[0]]
 
 			if data == "folder":
 				#get the folder in user settings
-				folder_path = os.path.dirname(self.user_settings["FavoriteFiles"][favorite_selection[0]])
+				folder_path = os.path.dirname(self.user_settings["AdditionalData"]["FavoriteFiles"][favorite_selection[0]])
 				mc.fileDialog2(ds=1, fm=1, dir=folder_path)
 				return
 			else:
@@ -1829,6 +1944,10 @@ class PipelineApplication:
 		pipeline_name = os.path.basename(pipeline_path)
 		#get project keyword
 		project_name = self.additionnal_settings["mayaProjectName"]
+
+
+		print(pipeline_path)
+		print(pipeline_name)
 
 		"""
 		if favorite_selection != None:
@@ -1967,19 +2086,44 @@ class PipelineApplication:
 		#get path of the scene
 		current_scene = mc.file()
 		pipeline_path = mc.textField(self.project_label, query=True, text=True)
-		for r, d, f in os.walk(pipeline_path):
-			for file in f:
-				if os.path.basename(file) == selection:
-					#save current file
+
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==True:
+			#dig into the pipeline index to search the file if possible
+			print(selection, selection in list(self.pipeline_index.keys()))
+			if selection in list(self.pipeline_index.keys()):
+				#try to open the file
+				#get the path of the file to open in the dictionnary
+				fullpath = os.path.join(self.pipeline_index[selection]["path"], selection)
+				if os.path.isfile(fullpath) == False:
+					mc.error("That file doesn't exists anymore in the pipeline!")
+					return 
+				else:
 					try:
 						mc.file(save=True)
 					except RuntimeError:
 						mc.warning("This file doesn't have any name!")
-						
 					mc.file(new=True, force=True)
-					mc.file(os.path.join(r, file), o=True)
+					mc.file(fullpath, o=True)
 					mc.warning("File opened successfully")
 					self.take_picture_function("test")
+			else:
+				mc.error("Impossible to find that file in the current pipeline index!")
+				return
+
+		else:
+			for r, d, f in os.walk(pipeline_path):
+				for file in f:
+					if os.path.basename(file) == selection:
+						#save current file
+						try:
+							mc.file(save=True)
+						except RuntimeError:
+							mc.warning("This file doesn't have any name!")
+							
+						mc.file(new=True, force=True)
+						mc.file(os.path.join(r, file), o=True)
+						mc.warning("File opened successfully")
+						self.take_picture_function("test")
 
 
 
@@ -2074,39 +2218,73 @@ class PipelineApplication:
 		items_extension_list = mc.textField(self.assets_items_extension_textfield, query=True, text=True).split(";")
 		textures_extension_list = mc.textField(self.assets_textures_extension_textfield, query=True, text=True).split(";")
 
-		print(mc.checkBox(self.searchbar_checkbox, query=True, value=True), mc.checkBox(self.folder_checkbox, query=True, value=True))
+		#get new lod values in intfield
+		#check that values are usable
+		lod_minimum_value = mc.intField(self.lodminimumvalue_intfield, query=True, value=True)
+		lod_maximum_value = mc.intField(self.lodmaximumvalue_intfield, query=True, value=True)
+
+		if command == "lod_minimum":
+			if lod_minimum_value >= lod_maximum_value:
+				mc.warning("Invalid minimum lod value!\nOld value restored")
+
+				lod_minimum_value = self.additionnal_settings["lodInterval"][0]
+				mc.intField(self.lodminimumvalue_intfield, edit=True, value=self.additionnal_settings["lodInterval"][0])
+
+		if command == "lod_maximum":
+			if lod_maximum_value <= lod_minimum_value:
+				mc.warning("Invalid maximum lod value!\nOld value restored")
+
+				lod_maximum_value = self.additionnal_settings["lodInterval"][1]
+				#change the new value by the old value in the intfield!
+				mc.intField(self.lodmaximumvalue_intfield, edit=True, value=self.additionnal_settings["lodInterval"][1])
+
+
+
+
+		#print(mc.checkBox(self.searchbar_checkbox, query=True, value=True), mc.checkBox(self.folder_checkbox, query=True, value=True))
 
 		#self.additionnal_settings["checkboxValues"] = [mc.checkBox(self.searchbar_checkbox, query=True, value=True), mc.checkBox(self.folder_checkbox, query=True, value=True), scenes, items, textures, folder]
 		self.additionnal_settings["3dSceneExtension"] = scenes_extension_list
 		self.additionnal_settings["3dItemExtension"] = items_extension_list
 		self.additionnal_settings["texturesExtension"] = textures_extension_list
+		self.additionnal_settings["lodInterval"] = [lod_minimum_value, lod_maximum_value]
+
 		
 		self.user_settings = {
-			"index_checkbox": mc.checkBox(self.index_checkbox, query=True, value=True),
-			"projectcontent_checkbox":mc.checkBox(self.projectcontent_checkbox, query=True, value=True),
-			"searchbar_checkbox":mc.checkBox(self.searchbar_checkbox, query=True, value=True),
-			"folder_checkbox":mc.checkBox(self.folder_checkbox, query=True, value=True),
-			"scenes_checkbox":mc.checkBox(self.scenes_checkbox, query=True, value=True),
-			"items_checkbox":mc.checkBox(self.items_checkbox, query=True, value=True),
-			"textures_checkbox":mc.checkBox(self.textures_checkbox, query=True, value=True),
+			"CheckboxValues": {
+				"lastsyntax_checkbox":mc.checkBox(self.displayonlylastsyntax_checkbox, query=True, value=True),
+				"index_checkbox": mc.checkBox(self.index_checkbox, query=True, value=True),
+				"projectcontent_checkbox":mc.checkBox(self.projectcontent_checkbox, query=True, value=True),
+				"searchbar_checkbox":mc.checkBox(self.searchbar_checkbox, query=True, value=True),
+				"folder_checkbox":mc.checkBox(self.folder_checkbox, query=True, value=True),
+				"scenes_checkbox":mc.checkBox(self.scenes_checkbox, query=True, value=True),
+				"items_checkbox":mc.checkBox(self.items_checkbox, query=True, value=True),
+				"textures_checkbox":mc.checkBox(self.textures_checkbox, query=True, value=True),
 
-			"archivemenu_projectcheckbox":mc.checkBox(self.archivemenu_projectcheckbox, query=True, value=True),
-			"archivemenu_pipelinecheckbox":mc.checkBox(self.archivemenu_pipelinecheckbox, query=True, value=True),
+				"archivemenu_projectcheckbox":mc.checkBox(self.archivemenu_projectcheckbox, query=True, value=True),
+				"archivemenu_pipelinecheckbox":mc.checkBox(self.archivemenu_pipelinecheckbox, query=True, value=True),
 
-			#"render_texture_manual_checkbox":mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True),
-			#"render_texture_automatic_checkbox":mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True),
-			#"render_texture_limit_project":mc.checkBox(self.render_texture_limit_project, query=True, value=True),
-			#"render_texture_udim_checking":mc.checkBox(self.render_texture_udim_checking, query=True, value=True),
+				#"render_texture_manual_checkbox":mc.checkBox(self.render_texture_manual_checkbox, query=True, value=True),
+				#"render_texture_automatic_checkbox":mc.checkBox(self.render_texture_automatic_checkbox, query=True, value=True),
+				#"render_texture_limit_project":mc.checkBox(self.render_texture_limit_project, query=True, value=True),
+				#"render_texture_udim_checking":mc.checkBox(self.render_texture_udim_checking, query=True, value=True),
 
-			"export_current_folder_checkbox":mc.checkBox(self.export_current_folder_checkbox, query=True, value=True),
-			"export_custom_folder_checkbox":mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True),
-			"export_assist_folder_checkbox":mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True),
-			"export_projectassist_folder_checkbox":mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True),
-			"export_item_checkbox":mc.checkBox(self.export_item_checkbox, query=True, value=True),
-			"export_edit_name_checkbox":mc.checkBox(self.export_edit_name_checkbox, query=True, value=True),
-			"export_backup_publish_checkbox":mc.checkBox(self.export_backup_publish_checkbox, query=True, value=True),
-			"export_shader_checkbox":mc.checkBox(self.export_shader_checkbox, query=True, value=True),
+				"export_current_folder_checkbox":mc.checkBox(self.export_current_folder_checkbox, query=True, value=True),
+				"export_custom_folder_checkbox":mc.checkBox(self.export_custom_folder_checkbox, query=True, value=True),
+				"export_assist_folder_checkbox":mc.checkBox(self.export_assist_folder_checkbox, query=True, value=True),
+				"export_projectassist_folder_checkbox":mc.checkBox(self.export_projectassist_folder_checkbox, query=True, value=True),
+				"export_item_checkbox":mc.checkBox(self.export_item_checkbox, query=True, value=True),
+				"export_edit_name_checkbox":mc.checkBox(self.export_edit_name_checkbox, query=True, value=True),
+				"export_backup_publish_checkbox":mc.checkBox(self.export_backup_publish_checkbox, query=True, value=True),
+				"export_shader_checkbox":mc.checkBox(self.export_shader_checkbox, query=True, value=True),
+			},
+			"AdditionalData": {
+				"FavoriteFiles": self.user_settings["AdditionalData"]["FavoriteFiles"],
+				"ExportRaimbow": self.user_settings["AdditionalData"]["ExportRaimbow"],
+				"ExportWebsite": self.user_settings["AdditionalData"]["ExportWebsite"],
+			}
 		}
+
 
 		"""
 		self.default_additional_settings = {
@@ -2119,7 +2297,6 @@ class PipelineApplication:
 		}
 		"""
 		self.save_settings_file()
-		mc.warning("Saved!")
 
 
 
@@ -2141,11 +2318,15 @@ class PipelineApplication:
 			return
 		else:
 			#get the nomenclature of the current type
-			nomenclature = self.settings[type_selection[0]][0]
+			nomenclature_data = self.settings[type_selection[0]][0]
 			keyword = self.settings[type_selection[0]][1]
 			defaultfolder = self.settings[type_selection[0]][2]
 
-			splited_nomenclature = nomenclature.split("_")
+			if type(nomenclature_data) != list:
+				nomenclature_data = [nomenclature_data]
+
+
+			splited_nomenclature = nomenclature_data[-1].split("_")
 			splited_filename = os.path.splitext(os.path.basename(mc.file(query=True, sn=True)))[0].split("_")
 			"""
 			print(type_selection[0])
@@ -2163,6 +2344,13 @@ class PipelineApplication:
 					#print(type_selection[0])
 					final_filename.append(keyword)
 					#final_filename.append(type_selection[0])
+
+				if splited_nomenclature[i] == "[lod]":
+					print("LOD DETECTED!")
+					#get the content of the intfield for the level of detail
+					lod_value = mc.intField(self.export_lod_intfield, query=True, value=True)
+
+					final_filename.append("lod%s"%lod_value)
 
 				if splited_nomenclature[i] == "[artist]":
 					artist_name = mc.textField(self.export_artist_name_textfield, query=True, text=True)
@@ -2184,13 +2372,16 @@ class PipelineApplication:
 							return
 						for word in splited_filename:
 							for setting_name, setting_content in self.settings.items():
+								setting_syntax_list = setting_content[1]
 								if word == setting_content[1]:
-									actual_keyword = setting_content[1]
-									if ("[name]" in setting_content[0].split("_")) == False:
-										mc.error("Impossible to get the name from the actual filename!")
-										return
-									else:
-										actual_name = splited_filename[setting_content[0].split("_").index("[name]")]
+									for setting_syntax in setting_syntax_list:
+										actual_keyword = setting_content[1]
+										if ("[name]" in setting_syntax.split("_")) == False:
+											mc.error("Impossible to get the name from the actual filename!")
+											return
+										else:
+											actual_name = splited_filename[setting_content[0].split("_").index("[name]")]
+											break
 						if( actual_keyword == None) or (actual_name == None):
 							mc.error("Impossible to get the actual name of the file to create the filename!")
 							return
@@ -2206,6 +2397,7 @@ class PipelineApplication:
 						else:
 							mc.error("Impossible to get the name in textfield!")
 							return
+
 
 				if splited_nomenclature[i] == "[version]":
 					#if mc.checkBox(self.export_edit_version_checkbox, query=True, value=True) == False:
@@ -2947,40 +3139,70 @@ class PipelineApplication:
 			mc.error("You have to select files to rename!")
 			return
 		else:
-			print("searching")
 			
-			#create the list with final filepath
-			#get the path of the pipeline
-			for root, dirs, files in os.walk(mc.textField(self.project_label, query=True, text=True)):
-				for f in files:
-					if (f in file_selection)==True:
-						final_file_list.append(os.path.join(root,f))
+			if mc.checkBox(self.index_checkbox, query=True, value=True) == True:
+				#search the file selected in the index
+				for file in file_selection:
+					print(file in list(self.pipeline_index.keys()))
 
-			if len(final_file_list) == 0:
-				mc.error("No matching elements to rename!")
-				return
-			#print(old_content, type(old_content), self.letter_verification_function(old_content))
-			#print(new_content, type(new_content), self.letter_verification_function(new_content))
+					if file in list(self.pipeline_index.keys()):
 
-			for file in final_file_list:
-				root = os.path.dirname(file)
-				filename = os.path.splitext(os.path.basename(file))[0]
-				old_filename = filename
-				extension = os.path.splitext(os.path.basename(file))[1]
+						#get the fullpath of the file in the index
+						fullpath = self.pipeline_index[file]["fullpath"]
+						path = self.pipeline_index[file]["path"]
+						filename = self.pipeline_index[file]["filename"]
 
-				filename = filename.replace(old_content, new_content)
-				if (self.letter_verification_function(old_content)!=True) and (self.letter_verification_function(new_content)==True):
-					mc.error("You need something to replace!")
+						#rename all elements of the path
+						new_filename = filename.replace(old_content, new_content)
+						if (self.letter_verification_function(prefix_content)==True):
+							new_filename = prefix_content+new_filename
+						if (self.letter_verification_function(suffix_content)==True):
+							new_filename = new_filename+suffix_content
+
+						print("FINAL FILENAME DEFINED : %s"%new_filename)
+						print("full path : %s"%(os.path.join(path, new_filename)))
+
+						try:
+							os.rename(os.path.join(path, file), os.path.join(path, new_filename))
+							print("File renamed successfully")
+						except Exception as error:
+							mc.warning("Impossible to rename the file!\n%s"%error)
+			
+			else:
+			
+				#create the list with final filepath
+				#get the path of the pipeline
+				for root, dirs, files in os.walk(mc.textField(self.project_label, query=True, text=True)):
+					for f in files:
+						if (f in file_selection)==True:
+							final_file_list.append(os.path.join(root,f))
+
+				if len(final_file_list) == 0:
+					mc.error("No matching elements to rename!")
 					return
+				#print(old_content, type(old_content), self.letter_verification_function(old_content))
+				#print(new_content, type(new_content), self.letter_verification_function(new_content))
 
-				if (self.letter_verification_function(prefix_content)==True):
-					filename = prefix_content+filename 
-				if (self.letter_verification_function(suffix_content)==True):
-					filename = filename+suffix_content 
-				final_filename = os.path.join(root,filename+extension)
-				
-				os.rename(file, final_filename)
-				print("%s renamed as %s"%(file, final_filename))
+				for file in final_file_list:
+					root = os.path.dirname(file)
+					filename = os.path.splitext(os.path.basename(file))[0]
+					old_filename = filename
+					extension = os.path.splitext(os.path.basename(file))[1]
+
+					filename = filename.replace(old_content, new_content)
+					if (self.letter_verification_function(old_content)!=True) and (self.letter_verification_function(new_content)==True):
+						mc.error("You need something to replace!")
+						return
+
+					if (self.letter_verification_function(prefix_content)==True):
+						filename = prefix_content+filename 
+					if (self.letter_verification_function(suffix_content)==True):
+						filename = filename+suffix_content 
+					final_filename = os.path.join(root,filename+extension)
+					
+					os.rename(file, final_filename)
+					print("%s renamed as %s"%(file, final_filename))
+			
 
 
 
@@ -3465,30 +3687,52 @@ class PipelineApplication:
 
 		#get the file selection
 		file_selection = mc.textScrollList(self.result_list, query=True, si=True)
-		if file_selection == None:
-			mc.error("You have to select at least one file!")
-			return
-		#get the path of the file
-		if mc.checkBox(self.searchbar_checkbox, query=True, value=True)==True:
-			#get the maya project path
-			path = mc.workspace(query=True, active=True)
-			if os.path.isdir(path)==False:
-				mc.error("You have to define a correct maya project first!")
-				return 
-		else:
-			if os.path.isdir(mc.textField(self.project_label, query=True, text=True))==False:
-				mc.error("Impossible to define the root folder!")
-				return
-			path = mc.textField(self.project_label, query=True, text=True)
-		print(file_selection)
 		final_file_list = []
-		for root, dirs, files in os.walk(path):
-			#print(root)
-			for f in files:
-				#print(f in file_selection, f in final_file_list, f)
-				if (f in file_selection) and (f in final_file_list)==False:
-					final_file_list.append(os.path.join(root, f))
-		favorite_file_data = self.user_settings["FavoriteFiles"]
+
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==True:
+			#get the file in the pipeline index
+			for file in file_selection:
+				if file in self.pipeline_index:
+					#get the path of the file
+					fullpath = os.path.join(self.pipeline_index[file]["path"], file)
+					print("File found in pipeline index : %s"%fullpath)
+
+					if os.path.isfile(fullpath) == False:
+						mc.warning("Warning : the file defined as favorite doesn't exists anymore in the project\n%s"%fullpath)
+					else:
+						final_file_list.append(fullpath)
+						print("File defined as favorite : %s"%fullpath)
+				else:
+					mc.warning("Impossible to find the file in the pipeline index : %s"%file)
+
+
+		if mc.checkBox(self.index_checkbox, query=True, value=True)==False:
+			if file_selection == None:
+				mc.error("You have to select at least one file!")
+				return
+			#get the path of the file
+			if mc.checkBox(self.searchbar_checkbox, query=True, value=True)==True:
+				#get the maya project path
+				path = mc.workspace(query=True, active=True)
+				if os.path.isdir(path)==False:
+					mc.error("You have to define a correct maya project first!")
+					return 
+			else:
+				if os.path.isdir(mc.textField(self.project_label, query=True, text=True))==False:
+					mc.error("Impossible to define the root folder!")
+					return
+				path = mc.textField(self.project_label, query=True, text=True)
+			print(file_selection)
+			
+			for root, dirs, files in os.walk(path):
+				#print(root)
+				for f in files:
+					#print(f in file_selection, f in final_file_list, f)
+					if (f in file_selection) and (f in final_file_list)==False:
+						final_file_list.append(os.path.join(root, f))
+
+
+		favorite_file_data = self.user_settings["AdditionalData"]["FavoriteFiles"]
 
 		if len(final_file_list) != 0:
 			for file in final_file_list:
@@ -3496,9 +3740,14 @@ class PipelineApplication:
 				favorite_file_data[os.path.basename(file)] = file
 
 
+		self.user_settings["AdditionalData"]["FavoriteFiles"] = favorite_file_data
+		self.save_settings_file()
+		self.apply_user_settings_function()
+		"""
 		self.user_settings["FavoriteFiles"] = favorite_file_data
 		self.save_settings_file()
 		self.apply_user_settings_function()
+		"""
 
 
 
@@ -3521,22 +3770,272 @@ class PipelineApplication:
 
 		#go through the settings
 		splited_file = filename.split("_")
-		for content in splited_file:
+		
+		for key, value in self.settings.items():
+			syntax = value[0]
+
+			if type(syntax) != list:
+				syntax_data = [syntax]
+			else:
+				syntax_data = syntax
 			
-			for setting_name, setting_content in self.settings.items():
-				if content == setting_content[1]:
-					#get syntax
-					if len(splited_file) == len(setting_content[0].split("_")):
-						#check if the keyword name is in the syntax
+			for syntax in syntax_data:
+				splited_syntax = syntax.split("_")
+
+				if len(splited_syntax) == len(splited_file):
+					for i in range(0,len(splited_syntax)):
+						if (splited_syntax[i] == "[key]") and (splited_file[i] == value[1]):
+							print("key found %s"%splited_file[i])
+
+							#try to find the name index in that nomenclature
+							if "[name]" in splited_syntax:
+								name_index = splited_syntax.index("[name]")
+
+								scene_name = splited_file[name_index]
+								print("Name found : %s"%scene_name)
+								mc.textField(self.export_edit_name_textfield, edit=True, text=scene_name)
+							else:
+								mc.warning("Impossible to find [name] keyword in syntax!")
+
+
+
+
+
+
+	def get_children_function(self, element):
+		#get the list of children for that element
+		if element not in self.children_list:
+			self.children_list.append(element)
+		
+		try:
+			children_list = mc.listRelatives(element, children=True, fullPath=True) or []
+		except:
+			mc.warning("Impossible to get the children list for %s"%element)
+		else:
+			
+			if len(children_list) != 0:
+				for children in children_list:
+					self.get_children_function(children)
+
+
+
+
+
+
+
+
+
+
+	def export_selection_in_project_function(self, event):
+		#get the selection in the outliner
+		selection = mc.ls(sl=True)
+
+
+
+
+		"""
+		for each element of the selection
+			-> parse the nomenclature of the element to get the name, and the type of scene
+			-> get the nomenclature of the file to export
+			-> get the export path of the file to export
+			-> export selection
+		"""
+
+		for element in selection:
+
+
+			#parse the nomenclature
+			#nomenclature to respect
+			#	grpexport_name_type
+			#	mshexport_name_type
+			splited_element_name = element.split("_")
+			if len(splited_element_name) != 3:
+				mc.warning("Element skipped, wrong syntax : %s"%element)
+				continue 
+			else:
+				if splited_element_name[0] not in ["export", "|export"]:
+					mc.warning("Element skipped, wrong syntax : %s"%element)
+					continue
+				else:
+					if splited_element_name[2] not in self.additionnal_settings["exportSelectionTypeList"]:
+						mc.warning("Element skipped, wrong kind : %s"%element)
+						continue
+
+					element_name = splited_element_name[1]
+					element_kind = splited_element_name[2]
+					version= "publish"
+					lod = "lod3"
+
+
+					#define the export filename
+					#get the syntax of that type of scene
+					nomenclature_data = self.settings[element_kind][0]
+					if type(nomenclature_data) != list:
+						nomenclature_data = [nomenclature_data]
+
+					nomenclature = nomenclature_data[-1]
+					splited_nomenclature = nomenclature.split("_")
+
+
+					#get the default folder
+					default_folder = self.settings[element_kind][2]
+					splited_default_folder = default_folder.split("/")
+
+					final_filepath = []
+					final_filename = []
+
+
+					#save the real element name in a variable to export an item 
+					#with a right nomenclature
+					old_name = element
+					
+
+
+					
+					data_dictionnary = {
+						"[name]": element_name,
+						"[version]": self.additionnal_settings["editPublishFolder"][1],
+						"[type]": "mod",
+						"[key]": element_kind,
+						"[lod]": "lod3",
+						"[Origin]":self.project_path,
+						"[mayaProjectName]":self.additionnal_settings["mayaProjectName"],
+						"[editPublishFolder]":self.additionnal_settings["editPublishFolder"][1]
+					}
+
+
+					for i in range(len(splited_nomenclature)):
+						if splited_nomenclature[i] in data_dictionnary:
+							splited_nomenclature[i] = data_dictionnary[splited_nomenclature[i]]
+
+					for i in range(len(splited_default_folder)):
+						if splited_default_folder[i] in data_dictionnary:
+							splited_default_folder[i] = data_dictionnary[splited_default_folder[i]]
+
+					#print(splited_default_folder)
+					final_filename = "_".join(splited_nomenclature)+".ma"
+					final_filepath = "/".join(splited_default_folder)
+
+
+					final_fullpath = os.path.join(final_filepath, final_filename)
+
+
+					print("Destination path : %s"%final_fullpath)
+
+
+					"""
+					import maya.cmds as mc
+					test_loc=cmds.spaceLocator()
+					mc.setAttr("%s.visibility"%test_loc[0], True)
+
+					mc.matchTransform('grpexport_testgroup2_item','locator1', pos=True, rot=False, scl=False)
+
+					mc.xform("grpexport_testgroup2_item", t=True,t=(0,0,0), ws=True)
+					"""
+
+
+					#CENTER THE PIVOT OF THE OBJECT
+					mc.xform(element, cp=True)
+					#mc.makeIdentity(element, apply=True, t=1, r=1, s=1, n=0, pn=1)
+					print(element)
+					
+					self.children_list = []
+					self.get_children_function(element)
+
+					for children in self.children_list:
+						print(children)
+
+						#freeze trnansform and reset pivot
+						#makeIdentity -apply true -t 1 -r 1 -s 1 -n 0 -pn 1;
+						
+						mc.xform(children, cp=True)
+					print("All pivots centered")
+
+
+					
+
+
+					if mc.checkBox(self.exportselectionmove_checkbox, query=True, value=True)==True:
+						#create a locator at the center of the world
+						#create a locator at the current position of the group
+						locator_worldcenter = mc.spaceLocator()
+						locator_oldposition = mc.spaceLocator()
+
+						#match the locator old position with the element to save the old position
+						mc.matchTransform(locator_oldposition, element, pos=True, rot=False, scl=False)
+						#match the element with the locator at the center of the world
+						mc.matchTransform(element, locator_worldcenter, pos=True, rot=False, scl=False)
+						print("Item centered")
+
+
+
+					#create required folders of the path to save the file
+					os.makedirs(final_filepath, exist_ok=True)
+					old_name = element 
+					mc.rename(element, element_name)
+
+					#DONT FORGET TO SELECT THE ITEM TO EXPORT
+					mc.makeIdentity(element_name, apply=True, t=1, r=1, s=1, n=0, pn=1)
+					mc.select(element_name, r=True)
+					mc.file(final_fullpath, force=True, options="", type="mayaAscii", pr=True, es=True)
+
+					print("%s exported successfully : \n%s"%(element_kind, final_fullpath))
+					mc.rename(element_name, element)
+
+
+					#return the object at his origin position
+					if mc.checkBox(self.exportselectionmove_checkbox, query=True, value=True)==True:
+						mc.matchTransform(element, locator_oldposition, pos=True, scl=False, rot=False)
+						print("Old position of the item restored!")
+
+
+					if mc.checkBox(self.exportselectionreplace_checkbox, query=True, value=True)==True:
+						#import the new exported item as reference
 						try:
-							name_index = (setting_content[0].split("_")).index("[name]")
-							name_in_filename = splited_file[name_index]
+							imported_asset = mc.file(final_fullpath, r=True, returnNewNodes=True)
 						except:
-							mc.warning("Impossible to get name in the actual file!")
+							mc.warning("Impossible to reimport the exported asset\n"%final_fullpath)
 						
 						else:
-							print("\nScene name found in filename!")
-							mc.textField(self.export_edit_name_textfield, edit=True, text=name_in_filename)
+							if mc.checkBox(self.exportselectionmove_checkbox, query=True, value=True)==True:
+								#try to match the imported asset with the location of the old asset
+
+								#go through the list of imported elements and get the first node with | at the beginning
+								#try to split the node name, if there is several | in the name, it's not the first one!
+								found_parent=False
+								for item in imported_asset:
+									splited_item = item.split("|")
+
+									if (len(splited_item) == 2) and (splited_item[0] == ""):
+										print("PARENT OF THE REFERENCE FOUND : %s"%item)
+										found_parent=True 
+										break
+
+								if found_parent == False:
+									mc.warning("Impossible to match the reference with its old location")
+								else:
+									mc.matchTransform(item, locator_oldposition, pos=True, rot=False, scl=False)
+									print("Old location restored on imported asset : %s"%element)
+
+					
+					#delete all locators at the end of the process
+					try:
+						mc.delete(locator_oldposition)
+						mc.delete(locator_worldcenter)
+					except:
+						mc.warning("Impossible to clean locators!")
+					#delete the old item if the checkbox is checked
+					try:
+						mc.delete(element)
+					except:
+						mc.warning("Impossible to delete old item : %s"%element)
+
+
+
+
+
+
+
 
 
 

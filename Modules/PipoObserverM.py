@@ -1,8 +1,6 @@
 #coding: utf-8
 #PIPELINE MANAGER
 
-#Copyright 2023, Robin Delaporte AKA Quazar, All rights reserved.
-
 
 
 import threading
@@ -25,129 +23,187 @@ from datetime import datetime
 
 class PipelineObserverApplication:
 
-
 	def parse_file_function(self, f):
-		#print("Checking file : %s"%f)
-		#print("Checking file %s %s"%(root, f))
 		file_name = None
 		
-		#parse filename
 		filename, extension = os.path.splitext(f)
 		splited_filename = filename.split("_")
-		
+
+		global_error = False
+
+		file_kind = None
+		file_type = None 
+		file_name = None 
+		file_version = None 
+		file_lod = None
 
 
 
 		for key, value in self.settings.items():
 
-			error=False
-			saved_key = None
-			saved_type = None
-			saved_name = None
-			sqversion = None 
-			shversion = None
 
-			syntax = value[0]
-			splited_syntax = syntax.split("_")
-			#print(splited_syntax)
+			type_error = False
 
-			if len(splited_filename) != len(splited_syntax):
-				error=True
-				continue
-			#print(f)
-			#print("	checking with %s"%key)
 
-			if "[type]" in splited_syntax:
-				index = splited_syntax.index("[type]")
-				#print(key)
-				#print(self.settings_dictionnary)
-				if (splited_filename[index] in self.settings_dictionnary[key])==False:
-		
-					#print("type error")
-					error=True
-					continue
+
+			if type(value[0]) != list:
+				syntax_data = [value[0]]
+
+			else:
+				#if the nomenclature settings contain a list
+				#check if the "display only last nomenclature" checkbox is checked
+				#if yes -> keep only the last nomenclature
+
+				"""
+				if mc.checkBox(self.displayonlylastsyntax_checkbox, query=True, value=True)==True:
+					syntax_data = value[0][-1]
 				else:
-					saved_type = splited_filename[index]
-
-			if "[key]" in splited_syntax:
-				index = splited_syntax.index("[key]")
-				#print(splited_filename[index], key)
-				if splited_filename[index] != key:
-					#print("key error")
-					error=True
-					continue
+					syntax_data = value[0]
+				"""
+				syntax_data = value[0]
 			
 
-			if "[project]" in splited_syntax:
-				index = splited_syntax.index("[project]")
+			#print("Syntax defined : %s"%syntax_data)
 
-				project_name = os.path.basename(self.project_path)
-				if splited_filename[index] != project_name:
-					#print("project error")
-					error=True
+
+			for syntax in syntax_data:
+				syntax_error = False
+				splited_syntax = syntax.split("_")
+
+				if len(splited_filename) != len(splited_syntax):
+					syntax_error = True
 					continue
 
-			if "[version]" in splited_syntax:
-				index = splited_syntax.index("[version]")
 
-				if splited_filename[index] != self.additionnal_settings["editPublishFolder"][1]:
-					if (len(splited_filename[index].split("v"))==2):
-						if (splited_filename[index].split("v")[0] != "") or (splited_filename[index].split("v")[1].isdigit()==False):
-							#print("version error")
-							error=True
-							continue
-							
-
-			if "[sqversion]" in splited_syntax:
-					index = splited_syntax.index("[sqversion]")
-					if (len(splited_filename[index].split("sq"))==2):
-						if (splited_filename[index].split("sq")[0] != "") or (splited_filename[index].split("sq")[1].isdigit()==False):
-							#print("sqversion error")
-							error=True 
-							continue
-						else:
-							sqversion = splited_filename[index]
-							
-
-							
-			if "[shversion]" in splited_syntax:
-				index = splited_syntax.index("[shversion]")
-				if (len(splited_filename[index].split("sh"))==2):
-					if (splited_filename[index].split("sh")[0] != "") or (splited_filename[index].split("sh")[1].isdigit()==False):
-						#print("shversion error")
-						error=True 
+				if "[key]" in splited_syntax:
+					index = splited_syntax.index("[key]")
+					#print(splited_filename[index], key)
+					if splited_filename[index] != key:
+						#print("key error")
+						syntax_error = True
 						continue
 					else:
-						shversion = splited_filename[index]
-						
-
-						
+						file_kind = splited_filename[splited_syntax.index("[key]")]
 
 
-			if ("[name]" in splited_syntax):
-				name = splited_filename[splited_syntax.index("[name]")]
-				#print("name detected %s"%splited_filename[splited_syntax.index("[name]")])
-				file_name = name
+				if "[type]" in splited_syntax:
+					index = splited_syntax.index("[type]")
+
+					if file_kind != None:
+						#print(file_kind)
+						#print(self.settings_dictionnary)
+						#print(self.settings_dictionnary[file_kind])
+						if splited_filename[index] not in self.settings_dictionnary[file_kind]:
+							syntax_error = True
+							continue 
+						else:
+							file_type = splited_filename[index]
+					else:
+						mc.warning("Impossible to get the type of the file!")
+						syntax_error=True
+						continue
 				
 
+				if "[project]" in splited_syntax:
+					index = splited_syntax.index("[project]")
 
-			if ("[artist]" in splited_syntax):
-				artist = splited_filename[splited_syntax.index("[artist]")]
-				if (self.letter_verification_function(artist) == False) or (self.letter_verification_function(artist)==None):
-					#print("artist error")
-					error=True
-					continue
+					project_name = os.path.basename(self.project_path)
+					if splited_filename[index] != project_name:
+						#print("project error")
+						syntax_error = True
+						continue
 
-			if error==False:
-				#return (file_name, key, saved_type)
-				return {
-					"file_name":file_name,
-					"key":key,
-					"saved_type":saved_type,
-					"sqversion":sqversion,
-					"shversion":shversion,
-				}
-		return False
+				if "[version]" in splited_syntax:
+					index = splited_syntax.index("[version]")
+
+					if splited_filename[index] != self.additionnal_settings["editPublishFolder"][1]:
+						if (len(splited_filename[index].split("v"))==2):
+							if (splited_filename[index].split("v")[0] != "") or (splited_filename[index].split("v")[1].isdigit()==False):
+								#print("version error")
+								syntax_error = True
+								continue
+							else:
+								file_version = splited_filename[index]
+
+				
+				if "[lod]" in splited_syntax:
+					#print("LOD FOUND!")
+					index = splited_syntax.index("[lod]")
+
+					splited_element = splited_filename[index].split("lod")
+					#print(splited_element)
+
+					#print(len(splited_element), splited_element)
+
+					if len(splited_element) != 2:
+						syntax_error = True 
+						continue 
+					else:
+						if splited_element[0] == "":
+							try:
+								int(splited_element[1])
+							except:
+								syntax_error = True
+								continue
+						else:
+							syntax_error = True
+							continue
+				
+								
+
+				if "[sqversion]" in splited_syntax:
+						index = splited_syntax.index("[sqversion]")
+						if (len(splited_filename[index].split("sq"))==2):
+							if (splited_filename[index].split("sq")[0] != "") or (splited_filename[index].split("sq")[1].isdigit()==False):
+								#print("sqversion error")
+								syntax_error = True 
+								continue
+							else:
+								sqversion = splited_filename[index]
+								
+
+								
+				if "[shversion]" in splited_syntax:
+					index = splited_syntax.index("[shversion]")
+					if (len(splited_filename[index].split("sh"))==2):
+						if (splited_filename[index].split("sh")[0] != "") or (splited_filename[index].split("sh")[1].isdigit()==False):
+							#print("shversion error")
+							syntax_error = True 
+							continue
+						else:
+							shversion = splited_filename[index]
+							
+
+							
+
+
+				if ("[name]" in splited_syntax):
+					name = splited_filename[splited_syntax.index("[name]")]
+					#print("name detected %s"%splited_filename[splited_syntax.index("[name]")])
+					file_name = name
+					
+
+
+				if ("[artist]" in splited_syntax):
+					artist = splited_filename[splited_syntax.index("[artist]")]
+					if (self.letter_verification_function(artist) == False) or (self.letter_verification_function(artist)==None):
+						#print("artist error")
+						syntax_error = True
+						continue
+
+
+				if syntax_error == False:
+					return [file_kind, file_name, file_type, file_version, file_lod]
+
+
+
+
+
+
+
+
+		
+
 			
 		
 
@@ -187,7 +243,8 @@ class PipelineObserverApplication:
 				path = os.path.dirname(file_path)
 				filename, extension = os.path.splitext(os.path.basename(file_path))
 				
-					
+				
+				
 				if os.path.basename(file_path) in self.pipeline_index:
 					#check the path in the pipeline
 					if os.path.isfile(self.pipeline_index[os.path.basename(file_path)]["fullpath"])==False:
@@ -201,14 +258,14 @@ class PipelineObserverApplication:
 					
 					value = self.parse_file_function(os.path.basename(file_path))
 					if value != False:
-					
+						if type(value) != list:
+							value = []
 						self.pipeline_index[os.path.basename(file_path)] = {
 							"path":(r""+path).replace("\\", "/").replace(os.sep, "/"),
 							"fullpath": (r""+os.path.join(path, filename)).replace("\\", "/").replace(os.sep, "/"),
 							"filename":filename,
 						}
-					
-						
+
 
 					with self.lock:
 						if file_path not in self.processed_files:
@@ -346,11 +403,9 @@ class MyHandler(FileSystemEventHandler):
 
 	def on_modified(self, event):
 		if not event.is_directory:
-			#print('modified')
 			
 			filepath = event.src_path
 			if os.path.basename(filepath) != "PipelineIndex.json":
-				#print("Modified\n")
 				file_data = {
 					"path":(os.path.dirname(event.src_path)).replace(os.sep, "/"),
 					"fullpath":(event.src_path).replace(os.sep, "/"),
@@ -363,11 +418,12 @@ class MyHandler(FileSystemEventHandler):
 					#print("value after modifying %s [%s]"%(value, event.src_path))
 					self.delete_ghost_files_function()
 
+					#self.check_for_notification_function(filepath)
 					self.pipo.save_pipeline_index_function()
 
 	def on_created(self, event):
 		if not event.is_directory:
-			#print("created")
+			print("created")
 			filepath = event.src_path
 			file_data = {
 				"path":(os.path.dirname(event.src_path)).replace(os.sep, "/"),
@@ -382,6 +438,7 @@ class MyHandler(FileSystemEventHandler):
 			if value != False:
 				#print("value after creating %s [%s]"%(value, event.src_path))
 				self.delete_ghost_files_function()
+				self.check_for_notification_function(filepath, value)
 				self.pipo.save_pipeline_index_function()
 
 	def delete_ghost_files_function(self):
@@ -398,13 +455,17 @@ class MyHandler(FileSystemEventHandler):
 					except:
 						pass 
 		except:
-			print("Impossible to check ghost files now!")
+			#print("Impossible to check ghost files now!")
 			pass	
+
+
+
+
 
 	def on_moved(self, event):
 		#replace the old value by the new value
 		if not event.is_directory:
-			#print("moved")
+			
 			old_path = event.src_path
 			new_path = event.dest_path
 
@@ -430,6 +491,8 @@ class MyHandler(FileSystemEventHandler):
 					"filename":os.path.splitext(os.path.dirname(event.dest_path))[0],
 				}
 				self.pipo.pipeline_index[os.path.basename(event.dest_path)] = file_data
+
+				#self.check_for_notification_function(event.src_path)
 				
 				self.pipo.save_pipeline_index_function()
 				#print("MOVED")
@@ -437,7 +500,7 @@ class MyHandler(FileSystemEventHandler):
 
 	def on_deleted(self, event):
 		if not event.is_directory:
-			#print("deleted")
+			
 			#print(event.src_path)
 			#get the value of the file in the dictionnary
 			#delete this key
@@ -452,3 +515,6 @@ class MyHandler(FileSystemEventHandler):
 				except:
 					pass 
 
+
+	def check_for_notification_function(self, filepath, value):
+		print("%s : %s"%(value, filepath))

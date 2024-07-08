@@ -247,6 +247,9 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 			self.project_path = "None"
 			mc.warning("No informations loaded!")
 
+		print("PROJECT PATH :")
+		print(self.project_path)
+
 
 
 
@@ -271,7 +274,8 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 		self.settings, self.settings_dictionnary, self.additionnal_settings, self.texture_settings, self.user_settings = self.load_settings_function()
 	
-		
+		print(self.settings)
+		print(self.settings_dictionnary)	
 		
 	  
 
@@ -370,7 +374,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 	def build_pipeline_interface_function(self):
-		self.main_window = mc.window(sizeable=False, title="Pipo - Written by Quazar", width=self.window_width, height=self.window_height)
+		self.main_window = mc.window(sizeable=True, title="Pipo - Written by Quazar", width=self.window_width, height=self.window_height)
 
 		#self.scrollbar = mc.scrollLayout(width=self.window_width + 40, parent=self.main_window, resizeCommand=self.resize_command_function)
 		self.main_column = mc.columnLayout(adjustableColumn=True, parent=self.main_window)
@@ -478,6 +482,15 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.items_checkbox = mc.checkBox(label="Search for 3D Items", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
 		self.textures_checkbox = mc.checkBox(label="Search for Textures", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
 		mc.separator(style="singleDash", parent=self.searchbar_limit_frame)
+		self.displayonlylastsyntax_checkbox = mc.checkBox(label="Display only last nomenclature", value=False, parent=self.searchbar_limit_frame, changeCommand=partial(self.save_additionnal_settings_function, None))
+		mc.text(label="Minimum LOD value", parent=self.searchbar_limit_frame, align="left")
+		self.lodminimumvalue_intfield = mc.intField(parent=self.searchbar_limit_frame, minValue=0, value=self.additionnal_settings["lodInterval"][0], changeCommand=partial(self.save_additionnal_settings_function, "lod_minimum"))
+		mc.text(label="Maximum LOD value", parent=self.searchbar_limit_frame, align="left")
+		self.lodmaximumvalue_intfield = mc.intField(parent=self.searchbar_limit_frame, minValue=1, value=self.additionnal_settings["lodInterval"][1], changeCommand=partial(self.save_additionnal_settings_function, "lod_maximum"))
+		mc.separator(style="singleDash", parent=self.searchbar_limit_frame)
+
+		self.old_lodmaximum_value = self.additionnal_settings["lodInterval"][1]
+
 		mc.text(label="Searchbar", parent=self.assets_main_leftcolumn)
 		self.main_assets_searchbar = mc.textField(parent=self.assets_main_leftcolumn, changeCommand=self.searchbar_function, enterCommand=self.searchbar_function)
 		mc.text(label="3D Scene extension", parent=self.searchbar_limit_frame)
@@ -486,6 +499,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		self.assets_items_extension_textfield = mc.textField(parent=self.searchbar_limit_frame, enterCommand=partial(self.save_additionnal_settings_function, None))
 		mc.text(label="Textures extension", parent=self.searchbar_limit_frame)
 		self.assets_textures_extension_textfield = mc.textField(parent=self.searchbar_limit_frame, enterCommand=partial(self.save_additionnal_settings_function, None))
+
 
 		"""
 		if self.additionnal_settings != None:
@@ -546,6 +560,20 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.button(label="Create archive from files", parent=self.assets_archive_frame, command=self.create_archive_from_files_function)
 		mc.button(label="Add files to archive", parent=self.assets_archive_frame, command=self.add_files_to_archive_function)
 
+
+
+
+
+		self.exportselection_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Export selection to Project", parent=self.assets_main_leftcolumn, collapsable=True, collapse=True)
+		#auto export at initial version (1 or 0)
+		#not supposed to export sequence or shot! only props or items
+		self.exportselectionmove_checkbox = mc.checkBox(label="Move to\nworld center", value=False, parent=self.exportselection_frame)
+		self.exportselectionreplace_checkbox = mc.checkBox(label="Replace by\nnew reference", value=False, parent=self.exportselection_frame)
+		mc.separator(style="none", height=5, parent=self.exportselection_frame)
+		mc.button(label="Export Selection\nTo Pipeline", parent=self.exportselection_frame, command=self.export_selection_in_project_function)
+
+
+
 		
 
 
@@ -565,6 +593,45 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 				except:
 					mc.warning("Impossible to launch GUI Presets on Mai page!")
 			"""
+
+
+
+
+
+		self.logs_column = mc.columnLayout(adjustableColumn=True, parent=self.tabs)
+		self.logs_rowcolumn = mc.rowColumnLayout(numberOfColumns=2, columnWidth=((1, self.window_width/3)))
+		self.logs_leftcolumn = mc.columnLayout(adjustableColumn=True, parent=self.logs_rowcolumn)
+		self.logs_rightcolumn = mc.columnLayout(adjustableColumn=True, parent=self.logs_rowcolumn)
+
+		self.logs_notificationallow = mc.checkBox(label="Enable notifications", value=True, parent=self.logs_leftcolumn)
+		self.logs_notificationforall = mc.checkBox(label="Notification when all tags", value=False, parent=self.logs_leftcolumn)
+		self.logs_displaynotification = mc.checkBox(label="Display notification as message", value=True, parent=self.logs_leftcolumn)
+
+		mc.separator(style="singleDash", height=10, parent=self.logs_leftcolumn)
+
+		mc.text(label="Kind Taglist", parent=self.logs_leftcolumn)
+		self.logs_kindlist = mc.textScrollList(numberOfRows=8, parent=self.logs_leftcolumn)
+		self.logs_leftrowcolumn = mc.rowColumnLayout(numberOfColumns=2, columnWidth=( (1, self.window_width/6), (2, self.window_width/6)), parent=self.logs_leftcolumn)
+
+		self.logs_leftrowcolumnleft = mc.columnLayout(adjustableColumn=True, parent=self.logs_leftrowcolumn)
+		self.logs_leftrowcolumnright = mc.columnLayout(adjustableColumn=True, parent=self.logs_leftrowcolumn)
+		
+		mc.text(label="Type Taglist", parent=self.logs_leftrowcolumnleft)
+		self.logs_typelist = mc.textScrollList(numberOfRows=8, parent=self.logs_leftrowcolumnleft)
+
+
+		mc.text(label="State Taglist", parent=self.logs_leftrowcolumnright)
+		self.logs_statelist = mc.textScrollList(numberOfRows=8, parent=self.logs_leftrowcolumnright)
+
+
+		self.logs_loglist = mc.textScrollList(numberOfRows= 15, parent=self.logs_rightcolumn)
+
+
+
+
+
+
+
 
 
 
@@ -802,6 +869,11 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 		self.reload_template_function()
 
+		mc.separator(style="singleDash", height=5, parent=self.export_leftcolumn)
+		#self.export_lod_checkbox = mc.checkBox(label="Use Lod in name", value=True, parent=self.export_leftcolumn)
+		mc.text(label="Level of detail of the scene", parent=self.export_leftcolumn)
+		self.export_lod_intfield = mc.intField(value=self.additionnal_settings["lodInterval"][0], minValue=self.additionnal_settings["lodInterval"][0], maxValue=self.additionnal_settings["lodInterval"][1], parent=self.export_leftcolumn)
+		
 
 		self.export_edit_frame = mc.frameLayout(backgroundColor=self.bright_color, label="Export edit files", parent=self.export_leftcolumn, collapsable=True, collapse=True)	
 		
@@ -824,6 +896,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 		mc.button(label="Save Publish", parent=self.export_publish_frame, command=partial(self.export_publish_function, "standard"),backgroundColor=self.dark_color)
 		#self.export_publish_keepname_checkbox = mc.checkBox(label="Keep item name", parent=self.export_leftcolumn)
 		mc.button(label="Publish selected", parent=self.export_publish_frame,command=partial(self.export_publish_function, "selection"))
+
 
 		self.export_shader_checkbox = mc.checkBox(value=True, parent=self.export_leftcolumn, label="Export with shader", changeCommand=partial(self.save_additionnal_settings_function, "none"))
 
@@ -859,7 +932,7 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 
 
 
-		mc.tabLayout(self.tabs, edit=True, tabLabel=((self.prod_column, "PROD ASSETS"), (self.export_column, "EXPORT"), (self.render_column, "RENDER"), (self.archive_column, "ARCHIVE")))
+		mc.tabLayout(self.tabs, edit=True, tabLabel=((self.prod_column, "PROD ASSETS"), (self.logs_column, "LOGS"), (self.export_column, "EXPORT"), (self.render_column, "RENDER"), (self.archive_column, "ARCHIVE")))
 		#self.dock_control = mc.dockControl(label="Pipo - Written by Quazar", enablePopupOption=True, floating=True, area="left", content=self.main_window, allowedArea=["right", "left"])
 
 		self.get_current_scene_name_function("content")
@@ -882,11 +955,26 @@ class PipelineGuiApplication(PipelineApplication, PipelineRenderApplication, Pip
 	
 	def apply_user_settings_function(self):
 		#go through the user settings dictionnary and apply checkbox values
-		for key, value in self.user_settings.items():
+		#get checkboxes values
+		checkbox_settings = self.user_settings["CheckboxValues"]
+		additionnal_settings = self.user_settings["AdditionalData"]
+
+		for key, value in checkbox_settings.items():
 			try:
 				exec('mc.checkBox(self.%s, edit=True, value=%s)'%(key, value))
 			except:
 				mc.warning("Checkbox skipped - %s"%key)
+
+		favorite_files = list(additionnal_settings["FavoriteFiles"].keys())
+		#if the list of favorites files isn't empty
+		#add the list to the textscrolllist related
+		if len(favorite_files) != 0:
+			mc.textScrollList(self.favorite_list, edit=True, removeAll=True, append=favorite_files)
+			print("Files added")
+		else:
+			print("No favorite files found!")
+
+
 
 
 	def update_archive_checkbox_function(self, command, event):
